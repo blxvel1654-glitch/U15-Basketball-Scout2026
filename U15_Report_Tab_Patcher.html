@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>U15 評価レポートタブ追加ツール</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:760px;margin:24px auto;padding:0 16px;line-height:1.65;color:#172033}
+.card{border:1px solid #d7deea;border-radius:14px;padding:18px;margin:16px 0}
+button{background:#1769aa;color:white;border:0;border-radius:10px;padding:12px 18px;font-weight:700}
+input{max-width:100%}
+.small{font-size:13px;color:#526174}
+</style>
+</head>
+<body>
+<h1>U15アプリ 評価レポートタブ追加</h1>
+<div class="card">
+<p><b>動画分析の中に「動画分析」「評価レポート」の2つのタブを追加します。</b></p>
+<ol>
+<li>GitHubから現在の <code>index.html</code> をダウンロード</li>
+<li>ここでファイルを選択</li>
+<li>「更新版を作成」を押す</li>
+<li>生成された <code>index.html</code> をGitHubのリポジトリにアップロード</li>
+</ol>
+<p class="small">元ファイルは変更せず、別ファイルとして更新版を作成します。すでに評価レポートタブがあるファイルには重複追加しません。</p>
+</div>
+<div class="card">
+<label for="file"><b>現在の index.html を選択</b></label><br><br>
+<input id="file" type="file" accept=".html,text/html">
+<br><br><button id="go">更新版を作成</button>
+<p id="status" class="small"></p>
+</div>
+<script>
+const patch = String.raw`
+<!-- U15_REPORT_TAB_PATCH_START -->
+<style id="u15-report-tab-style">
+.u15-report-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 16px}
+.u15-report-tab{border:1px solid #9aa9bb;background:#f2f5f9;color:#1d2939;padding:10px 16px;border-radius:999px;font-weight:700;cursor:pointer}
+.u15-report-tab.active{background:#155eef;color:#fff;border-color:#155eef}
+.u15-report-panel{border:1px solid #d0d5dd;border-radius:14px;padding:14px;margin:10px 0;background:var(--card-bg,#fff);color:inherit}
+.u15-report-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.u15-report-field{display:flex;flex-direction:column;gap:4px;margin:8px 0}
+.u15-report-field input,.u15-report-field textarea,.u15-report-field select{width:100%;box-sizing:border-box;padding:9px;border:1px solid #98a2b3;border-radius:8px;background:transparent;color:inherit}
+.u15-report-card{border:1px solid #d0d5dd;border-radius:12px;padding:12px;margin:10px 0}
+.u15-report-card img{max-width:100%;height:auto;max-height:280px;object-fit:contain;border-radius:8px}
+.u15-report-muted{font-size:12px;opacity:.75}
+.u15-report-action{background:#155eef;color:#fff;border:0;border-radius:8px;padding:9px 13px;font-weight:700;cursor:pointer;margin:4px 4px 4px 0}
+.u15-report-danger{background:#b42318}
+@media print{
+ body.u15-print-report *{visibility:hidden!important}
+ body.u15-print-report #u15ReportPrint,body.u15-print-report #u15ReportPrint *{visibility:visible!important}
+ body.u15-print-report #u15ReportPrint{position:absolute;left:0;top:0;width:100%;color:#111;background:#fff}
+ body.u15-print-report .u15-report-action{display:none!important}
+}
+</style>
+<script id="u15-report-tab-script">
+(function(){
+ if(window.__u15ReportTabInstalled)return;window.__u15ReportTabInstalled=true;
+ function init(){
+  const section=document.getElementById('videoAnalysis');
+  if(!section || section.querySelector('.u15-report-tabs'))return;
+  const original=[...section.children].filter(el=>el.id!=='u15-report-tab-style'&&el.id!=='u15-report-tab-script');
+  const nav=document.createElement('div');nav.className='u15-report-tabs';
+  const analysisBtn=document.createElement('button');analysisBtn.className='u15-report-tab active';analysisBtn.textContent='動画分析';analysisBtn.type='button';
+  const reportBtn=document.createElement('button');reportBtn.className='u15-report-tab';reportBtn.textContent='評価レポート';reportBtn.type='button';
+  nav.append(analysisBtn,reportBtn);
+  const panel=document.createElement('div');panel.className='u15-report-panel';panel.id='u15ReportPanel';panel.hidden=true;
+  panel.innerHTML=`
+   <h3>選手別 評価レポート</h3>
+   <p class="u15-report-muted">保存済みのシュート分析結果を表示します。関節角度やリリース位置は撮影角度・検出精度の影響を受けるため、最終判断はコーチが映像と照合してください。</p>
+   <div class="u15-report-grid">
+    <label class="u15-report-field">選手名<input id="u15ReportPlayer" placeholder="例：#7 山田"></label>
+    <label class="u15-report-field">シュート成功率（%）<input id="u15ReportPct" type="number" min="0" max="100" step="0.1" placeholder="例：45"></label>
+    <label class="u15-report-field">肘の角度（°）<input id="u15ReportElbow" type="number" min="0" max="180" placeholder="未計測なら空欄"></label>
+    <label class="u15-report-field">膝の角度（°）<input id="u15ReportKnee" type="number" min="0" max="180" placeholder="未計測なら空欄"></label>
+    <label class="u15-report-field">体幹の傾き（°）<input id="u15ReportTrunk" type="number" min="0" max="180" placeholder="未計測なら空欄"></label>
+    <label class="u15-report-field">リリース画像<input id="u15ReportImage" type="file" accept="image/*"></label>
+   </div>
+   <div class="u15-report-grid">
+    <label class="u15-report-field">良かった点<textarea id="u15ReportGood" rows="2" placeholder="例：肘がリング方向に伸びている"></textarea></label>
+    <label class="u15-report-field">改善点<textarea id="u15ReportImprove" rows="2" placeholder="例：膝と体幹の連動を確認する"></textarea></label>
+   </div>
+   <label class="u15-report-field">前回との比較・コーチ所見<textarea id="u15ReportCompare" rows="2" placeholder="前回からの変化、次回の確認事項"></textarea></label>
+   <button type="button" class="u15-report-action" id="u15ReportSave">この内容をレポートに保存</button>
+   <button type="button" class="u15-report-action" id="u15ReportPrintBtn">レポートをPDF保存・印刷</button>
+   <div id="u15ReportPrint"><h3>保存済みレポート</h3><div id="u15ReportList"></div></div>
+  `;
+  section.insertBefore(nav,section.firstChild);
+  section.appendChild(panel);
+  function show(which){
+   const report=which==='report';
+   original.forEach(el=>{el.hidden=report;});
+   panel.hidden=!report;
+   analysisBtn.classList.toggle('active',!report);reportBtn.classList.toggle('active',report);
+  }
+  analysisBtn.addEventListener('click',()=>show('analysis'));
+  reportBtn.addEventListener('click',()=>{show('report');render();});
+  const key='u15_release_reports_v1';
+  function load(){
+   try{const v=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(v)?v:[];}catch(e){return [];}
+  }
+  function saveAll(items){localStorage.setItem(key,JSON.stringify(items));}
+  function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function render(){
+   const list=document.getElementById('u15ReportList');if(!list)return;
+   const items=load().slice().reverse();
+   if(!items.length){list.innerHTML='<p>まだレポートがありません。上の欄に選手名や所見を入力して保存してください。</p>';return;}
+   list.innerHTML=items.map((r,i)=>'<article class="u15-report-card"><b>'+esc(r.player||r.playerName||'選手未設定')+'</b><div class="u15-report-muted">'+esc(r.date||r.createdAt||'')+'</div>'+
+    (r.image||r.releaseImage||r.skeletonImage?'<img src="'+(r.image||r.releaseImage||r.skeletonImage)+'" alt="リリース時の参考画像">':'')+
+    '<p>成功率：'+esc(r.pct??r.successRate??'未入力')+'%　肘：'+esc(r.elbow??'未計測')+'°　膝：'+esc(r.knee??'未計測')+'°　体幹：'+esc(r.trunk??'未計測')+'°</p>'+
+    '<p><b>良かった点：</b>'+esc(r.good||r.positive||'未記入')+'</p><p><b>改善点：</b>'+esc(r.improve||r.improvement||'未記入')+'</p><p><b>比較・所見：</b>'+esc(r.compare||'未記入')+'</p>'+
+    '<button type="button" class="u15-report-action u15-report-danger" data-del="'+(items.length-1-i)+'">このレポートを削除</button></article>').join('');
+   list.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{const a=load();a.splice(Number(b.dataset.del),1);saveAll(a);render();}));
+  }
+  document.getElementById('u15ReportSave').addEventListener('click',()=>{
+   const f=document.getElementById('u15ReportImage').files[0];
+   const data={player:document.getElementById('u15ReportPlayer').value.trim(),pct:document.getElementById('u15ReportPct').value,elbow:document.getElementById('u15ReportElbow').value,knee:document.getElementById('u15ReportKnee').value,trunk:document.getElementById('u15ReportTrunk').value,good:document.getElementById('u15ReportGood').value,improve:document.getElementById('u15ReportImprove').value,compare:document.getElementById('u15ReportCompare').value,date:new Date().toLocaleString('ja-JP')};
+   if(!data.player){alert('選手名を入力してください');return;}
+   const commit=img=>{if(img)data.image=img;const a=load();a.push(data);saveAll(a);render();alert('評価レポートを保存しました');};
+   if(f){const reader=new FileReader();reader.onload=()=>commit(reader.result);reader.readAsDataURL(f);}else commit('');
+  });
+  document.getElementById('u15ReportPrintBtn').addEventListener('click',()=>{document.body.classList.add('u15-print-report');window.print();document.body.classList.remove('u15-print-report');});
+  render();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+<\/script>
+<!-- U15_REPORT_TAB_PATCH_END -->
+`;
+document.getElementById('go').addEventListener('click',async()=>{
+ const f=document.getElementById('file').files[0],s=document.getElementById('status');
+ if(!f){s.textContent='index.htmlを選択してください。';return;}
+ try{
+  let html=await f.text();
+  if(!html.includes('id="videoAnalysis"')&&!html.includes("id='videoAnalysis'")){s.textContent='videoAnalysis セクションが見つかりません。現在のU15アプリの index.html を選んでください。';return;}
+  if(html.includes('U15_REPORT_TAB_PATCH_START')){s.textContent='このファイルには評価レポートタブ追加コードがすでに入っています。';return;}
+  const close=html.toLowerCase().lastIndexOf('</body>');
+  if(close<0){s.textContent='HTMLの </body> が見つかりません。';return;}
+  html=html.slice(0,close)+patch+'\n'+html.slice(close);
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='index.html';a.click();URL.revokeObjectURL(url);
+  s.textContent='更新版 index.html を作成しました。GitHubへアップロードしてください。';
+ }catch(e){s.textContent='作成エラー：'+e.message;}
+});
+</script>
+</body>
+</html>
