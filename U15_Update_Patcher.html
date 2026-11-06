@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>U15 Basketball Scout 更新パッチャー</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#f2f5f9;color:#182230;margin:0;padding:18px}
+main{max-width:760px;margin:auto;background:white;border-radius:14px;padding:18px}
+h1{font-size:21px}p,li{line-height:1.65}.box{background:#eef4fb;padding:12px;border-radius:10px}
+button,input{font:inherit;padding:11px;border-radius:8px}button{background:#2463a6;color:white;border:0;font-weight:700}
+input{width:100%;box-sizing:border-box;border:1px solid #ccd5df;margin:10px 0}
+#status{white-space:pre-wrap;margin-top:12px}
+</style>
+<main>
+<h1>🏀 U15 Basketball Scout 更新パッチャー</h1>
+<p>既存アプリの <b>index.html</b> を選択すると、既存コードを残したまま録画・ローカル保存・オフライン用キャッシュ機能・シュートリリース候補抽出・試合映像の動き分析パネルを追加し、更新版 index.html を作成します。</p>
+<div class="box">
+<b>使い方</b>
+<ol>
+<li>GitHubのU15-Basketball-Scout2026から現在の <code>index.html</code> を端末にダウンロードします。</li>
+<li>このページでそのファイルを選択します。</li>
+<li>「更新版を作成」を押し、出力された <code>index.html</code> を保存します。</li>
+<li>GitHub Pagesのリポジトリ内の index.html を、この更新版に置き換えます。</li>
+</ol>
+</div>
+<input id="file" type="file" accept=".html,text/html">
+<button id="go">更新版を作成</button>
+<div id="status"></div>
+</main>
+<script>
+const status=document.getElementById('status');
+document.getElementById('go').onclick=async()=>{
+ const f=document.getElementById('file').files[0];
+ if(!f){status.textContent='先に既存の index.html を選択してください。';return}
+ let html=await f.text();
+ if(!html.includes('U15 Basketball Scout')||!html.includes('id="camera"')||!html.includes('id="videoAnalysis"')){
+  status.textContent='このファイルは対象のU15アプリと確認できません。GitHubから現在の index.html を取得してください。';return;
+ }
+ if(html.includes('id="u15RecorderCard"')){status.textContent='このファイルには更新機能がすでに入っています。二重追加を防ぐため処理を中止しました。';return}
+ const recorderUI=`
+ <div class="card" id="u15RecorderCard">
+ <h2>🎥 試合録画・端末保存</h2>
+ <p class="hint">カメラ分析タブでカメラを起動してから録画を開始します。録画データは端末内のIndexedDBに保存し、外部サーバーへ送信しません。</p>
+ <div class="actions"><button class="primary" id="u15RecStart">録画開始</button><button class="danger" id="u15RecStop" disabled>録画停止・保存</button></div>
+ <div id="u15RecStatus" class="hint">録画待機中</div><div id="u15RecList"></div>
+ </div>`;
+ const shotUI=`
+ <div class="card" id="u15ShotAutoCard">
+ <h2>🏀 シュートリリース候補の自動抽出</h2>
+ <p class="hint">横から撮影した動画を選び、選手名を入力して解析します。手首の上昇と肩に対する位置からリリース候補フレームを推定し、骨格画像と関節角度を保存します。ボールの離れた瞬間を直接認識する機能ではなく、候補抽出です。</p>
+ <label>選手名・背番号</label><input id="u15ShotPlayer" placeholder="例：#7 山田">
+ <div class="actions"><button class="primary" id="u15ShotRun">リリース候補を解析</button><button id="u15ShotStop" disabled>停止</button></div>
+ <div id="u15ShotStatus" class="hint">動画分析タブで動画を読み込んでから実行してください。</div>
+ <div id="u15ShotReports"></div>
+ </div>`;
+ const gameUI=`
+ <div class="card" id="u15GameAiCard">
+ <h2>📊 AI試合映像分析</h2>
+ <p class="hint">動画分析タブで複数人の骨格検出を実行した後、位置・移動の集計を表示します。背番号やボール、得点、戦術を確実に自動判定する機能ではありません。</p>
+ <div class="actions"><button id="u15GameSummary">現在のAI検出データを分析</button></div>
+ <div id="u15GameSummaryOut" class="hint">既存の骨格検出結果を利用します。</div>
+ </div>`;
+ const marker='</section>\n\n<section id="videoAnalysis"';
+ if(!html.includes(marker)){status.textContent='挿入位置を特定できませんでした。元ファイルは変更していません。';return}
+ html=html.replace(marker,recorderUI+'\n</section>\n\n<section id="videoAnalysis"');
+ const videoEnd='</section>\n\n<section id="players"';
+ if(!html.includes(videoEnd)){status.textContent='動画分析タブの挿入位置を特定できませんでした。元ファイルは変更していません。';return}
+ html=html.replace(videoEnd,shotUI+'\n'+gameUI+'\n</section>\n\n<section id="players"');
+ const addon=String.raw`
+<script>
+(()=> {
+ const DB='u15_media_store_v1';let db;
+ function openDB(){return new Promise((res,rej)=>{let q=indexedDB.open(DB,1);q.onupgradeneeded=()=>q.result.createObjectStore('videos',{keyPath:'id'});q.onsuccess=()=>{db=q.result;res(db)};q.onerror=()=>rej(q.error)})}
+ async function listVideos(){try{await openDB();let tx=db.transaction('videos','readonly'),q=tx.objectStore('videos').getAll();q.onsuccess=()=>{let el=document.getElementById('u15RecList');if(!el)return;el.innerHTML=q.result.map(v=>'<div class="metric"><span>'+v.name+'<br><small>'+new Date(v.date).toLocaleString()+' / '+(v.size/1048576).toFixed(1)+'MB</small></span><button data-play="'+v.id+'">再生</button><button data-save="'+v.id+'">書出</button><button data-del="'+v.id+'">削除</button></div>').join('')||'<div class="empty">保存済み録画はありません</div>';el.querySelectorAll('[data-play]').forEach(b=>b.onclick=()=>playVideo(b.dataset.play));el.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>exportVideo(b.dataset.save));el.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>deleteVideo(b.dataset.del))}}catch(e){document.getElementById('u15RecStatus').textContent='端末保存を利用できません: '+e.message}}
+ async function storeVideo(item){await openDB();return new Promise((res,rej)=>{let tx=db.transaction('videos','readwrite');tx.objectStore('videos').put(item);tx.oncomplete=res;tx.onerror=()=>rej(tx.error)})}
+ async function getVideo(id){await openDB();return new Promise((res,rej)=>{let q=db.transaction('videos').objectStore('videos').get(Number(id));q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}
+ async function playVideo(id){let v=await getVideo(id),url=URL.createObjectURL(v.blob),w=window.open('','_blank');if(w)w.document.write('<video controls autoplay playsinline style="width:100%" src="'+url+'"></video>')}
+ async function exportVideo(id){let v=await getVideo(id),a=document.createElement('a'),u=URL.createObjectURL(v.blob);a.href=u;a.download=v.name;a.click();setTimeout(()=>URL.revokeObjectURL(u),3000)}
+ async function deleteVideo(id){await openDB();let tx=db.transaction('videos','readwrite');tx.objectStore('videos').delete(Number(id));tx.oncomplete=listVideos}
+ let recorder=null,chunks=[];
+ document.getElementById('u15RecStart').onclick=()=>{
+  let stream=document.getElementById('cameraVideo')?.srcObject,st=document.getElementById('u15RecStatus');
+  if(!stream){st.textContent='先に「カメラを起動」を押してください。';return}
+  if(!window.MediaRecorder){st.textContent='このブラウザは録画に対応していません。Chromeを最新版にしてください。';return}
+  let mime=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(x=>MediaRecorder.isTypeSupported(x));
+  try{recorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);chunks=[];recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};recorder.onstop=async()=>{let blob=new Blob(chunks,{type:recorder.mimeType||'video/webm'}),id=Date.now(),name='U15_game_'+new Date().toISOString().replace(/[:.]/g,'-')+'.webm';try{await storeVideo({id,name,date:new Date().toISOString(),size:blob.size,blob});st.textContent='録画を端末に保存しました。';listVideos()}catch(e){st.textContent='保存に失敗。動画が大きすぎる可能性があります。空き容量を確認してください。'}};recorder.start(1000);document.getElementById('u15RecStart').disabled=true;document.getElementById('u15RecStop').disabled=false;st.textContent='録画中…画面を閉じずに使用してください。'}catch(e){st.textContent='録画開始に失敗: '+e.message}
+ };
+ document.getElementById('u15RecStop').onclick=()=>{if(recorder&&recorder.state!=='inactive')recorder.stop();document.getElementById('u15RecStart').disabled=false;document.getElementById('u15RecStop').disabled=true};
+ listVideos();
+})();
+<\/script>
+<script type="module">
+(()=> {
+ const $=id=>document.getElementById(id);
+ let running=false,task=null,raf=0,prev=null,lastCandidate=0,reports=[];
+ try{reports=JSON.parse(localStorage.getItem('u15_release_reports_v1')||'[]')}catch(e){}
+ const saved=()=>{localStorage.setItem('u15_release_reports_v1',JSON.stringify(reports));render()};
+ function render(){let el=$('u15ShotReports');if(!el)return;el.innerHTML=reports.slice(0,15).map(r=>'<div class="metric"><span><b>'+r.player+'</b><br>'+r.date+' / '+r.time+'秒<br>肘 '+r.elbow+'°・膝 '+r.knee+'°・体幹 '+r.trunk+'°<br>'+r.comment+'</span><button data-img="'+r.id+'">骨格画像</button></div>').join('')||'<div class="empty">保存済みレポートはありません</div>';el.querySelectorAll('[data-img]').forEach(b=>b.onclick=()=>{let r=reports.find(x=>x.id===Number(b.dataset.img));if(!r)return;let a=document.createElement('a');a.href=r.image;a.download='U15_release_'+r.id+'.png';a.click()})}
+ function angle(a,b,c){if(!a||!b||!c)return null;let x=[a.x-b.x,a.y-b.y],y=[c.x-b.x,c.y-b.y],d=(x[0]*y[0]+x[1]*y[1])/(Math.hypot(...x)*Math.hypot(...y));return Math.round(Math.acos(Math.max(-1,Math.min(1,d)))*180/Math.PI)}
+ function pick(l){let rw=l[16],lw=l[15],rs=l[12],ls=l[11];return (rw?.visibility||0)>(lw?.visibility||0)?{w:rw,s:rs,el:angle(l[12],l[14],l[16]),k:angle(l[24],l[26],l[28]),shoulder:l[12],hip:l[24]}:{w:lw,s:ls,el:angle(l[11],l[13],l[15]),k:angle(l[23],l[25],l[27]),shoulder:l[11],hip:l[23]}}
+ function saveFrame(video,l,p){let c=document.createElement('canvas');c.width=video.videoWidth;c.height=video.videoHeight;let x=c.getContext('2d');x.drawImage(video,0,0);let links=[[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];x.strokeStyle='#00e5ff';x.fillStyle='#ffcc00';x.lineWidth=Math.max(3,c.width*.003);for(let [a,b] of links){if(l[a]?.visibility>.35&&l[b]?.visibility>.35){x.beginPath();x.moveTo(l[a].x*c.width,l[a].y*c.height);x.lineTo(l[b].x*c.width,l[b].y*c.height);x.stroke()}}for(let i of [11,12,13,14,15,16,23,24,25,26,27,28])if(l[i]?.visibility>.35){x.beginPath();x.arc(l[i].x*c.width,l[i].y*c.height,6,0,Math.PI*2);x.fill()}return c.toDataURL('image/png')}
+ async function run(){let v=$('analysisVideo');if(!v||!v.src||!v.videoWidth){$('u15ShotStatus').textContent='先に動画分析タブで動画を選択してください。';return}
+ try{$('u15ShotStatus').textContent='AIモデルを読み込んでいます…';let mod=await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.2/vision_bundle.mjs');let files=await mod.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.2/wasm');task=await mod.PoseLandmarker.createFromOptions(files,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task',delegate:'CPU'},runningMode:'VIDEO',numPoses:1});running=true;$('u15ShotRun').disabled=true;$('u15ShotStop').disabled=false;v.pause();v.currentTime=0;await new Promise(r=>v.onseeked=r);prev=null;let frames=0;
+ const step=()=>{if(!running)return;if(v.currentTime>=v.duration){stop();return}try{let res=task.detectForVideo(v,Math.round(v.currentTime*1000)),l=res.landmarks?.[0];if(l){let p=pick(l);if(p.w?.visibility>.55&&p.s?.visibility>.45){if(prev){let rise=prev.y-p.w.y,above=p.w.y<p.s.y+.015;if(prev.y<p.s.y+.03&&rise<-.001&&above&&v.currentTime-lastCandidate>.8){lastCandidate=v.currentTime;let image=saveFrame(v,l,p),id=Date.now(),el=p.el??0,k=p.k??0,trunk=Math.round(Math.atan2(p.hip.x-p.shoulder.x,p.hip.y-p.shoulder.y)*180/Math.PI);let player=$('u15ShotPlayer').value.trim()||'選手未指定';let comment=(el>=75&&el<=110?'肘角度は一般的な目安範囲。':'肘の角度をコーチと確認。')+' 膝・体幹は同じ撮影角度で継続比較してください。';reports.unshift({id,player,date:new Date().toLocaleString('ja-JP'),time:v.currentTime.toFixed(2),elbow:el,knee:k,trunk,comment,image});saved();$('u15ShotStatus').textContent='リリース候補を抽出しました。動画を続けて確認します。'}}prev=p.w;}}
+ catch(e){$('u15ShotStatus').textContent='解析エラー: '+e.message;stop();return}
+ v.currentTime=Math.min(v.duration,v.currentTime+0.12);v.onseeked=()=>{if(running)raf=requestAnimationFrame(step)};
+ };
+ v.onseeked=()=>{if(running)raf=requestAnimationFrame(step)};step();
+ }catch(e){$('u15ShotStatus').textContent='AI準備に失敗: '+e.message;$('u15ShotRun').disabled=false}}
+ function stop(){running=false;cancelAnimationFrame(raf);if(task){task.close();task=null}$('u15ShotRun').disabled=false;$('u15ShotStop').disabled=true}
+ $('u15ShotRun').onclick=run;$('u15ShotStop').onclick=stop;render();
+})();
+<\/script>
+<script>
+document.getElementById('u15GameSummary').onclick=()=>{
+ const out=document.getElementById('u15GameSummaryOut');
+ const count=Number(document.getElementById('aiFrameCount')?.textContent||0),tracks=Number(document.getElementById('aiTrackCount')?.textContent||0);
+ out.innerHTML='<b>骨格検出の集計</b><br>解析フレーム数：'+count+'<br>簡易追跡ID数：'+tracks+'<br><br>この映像から位置・移動の傾向を確認できます。現状の検出だけではボール保持、得点、戦術の種類を確定できません。映像をコーチが確認して最終判断してください。';
+};
+<\/script>
+`;
+ html=html.replace('</body>',addon+'\n</body>');
+ const blob=new Blob([html],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='index.html';a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);
+ status.textContent='更新版 index.html を作成しました。ダウンロード後、既存ファイルのバックアップを取ってから置き換えてください。AIモデルの初回読み込みには通信が必要です。録画と試合データ保存は端末内に保存します。';
+};
+</script>
