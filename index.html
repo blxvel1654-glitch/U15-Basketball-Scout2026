@@ -182,7 +182,7 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
 <section id="evaluation" class="panel">
  <div class="card">
   <h2>📊 選手別フォーム評価レポート</h2>
-  <p class="hint">動画分析で保存したシュートフォーム評価を集約します。肩・肘・手首・膝・体幹の測定値、良い点、改善点を選手別に確認できます。評価データはこの端末のブラウザに保存されたレポートを使用します。</p>
+  <p class="hint">動画分析で保存した自動シュートフォーム評価と、動画上で関節位置を指定して保存した測定記録を集約します。選手別の肩・肘・手首・膝・体幹の測定値、良い点、改善点を確認できます。</p>
   <div class="metricgrid" id="evaluationSummary"></div>
   <div class="actions no-print"><button class="primary" onclick="renderEvaluationReport()">最新データに更新</button><button onclick="exportEvaluationReport()">評価レポートJSON保存</button><button onclick="window.print()">PDF保存・印刷</button></div>
   <div id="evaluationContent"><div class="empty">保存済みフォームレポートがここに表示されます。</div></div>
@@ -493,17 +493,28 @@ function clearAutoPoseLog(){if(!confirm('AI分析の集計記録を消去しま�
 window.initAutoPose=initAutoPose;window.startAutoPose=startAutoPose;window.stopAutoPose=stopAutoPose;window.exportAutoPoseCSV=exportAutoPoseCSV;window.clearAutoPoseLog=clearAutoPoseLog;
 const aiFile=document.getElementById('analysisVideoFile');if(aiFile)aiFile.addEventListener('change',()=>{stopAutoPose();autoPoseLastTime=-1;autoPoseTracks.clear();autoPoseNextId=1;autoPoseFrames=0;shotHistories.clear();shotEvents=[];shotLastDetected.clear();renderAutoPosePlayers();renderShotEvents();document.getElementById('aiFrameCount').textContent='0';document.getElementById('aiTrackCount').textContent='0';document.getElementById('aiDetectedCount').textContent='0'});
 function renderEvaluationReport(){
- const list=Array.isArray(savedShotReports)?savedShotReports:[];
+ const shots=Array.isArray(savedShotReports)?savedShotReports:[];
+ const manual=Array.isArray(videoMeasurements)?videoMeasurements:[];
  const summary=document.getElementById('evaluationSummary'),content=document.getElementById('evaluationContent');
  if(!summary||!content)return;
- const avg=k=>{const a=list.map(r=>Number(r.metrics?.[k])).filter(Number.isFinite);return a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):null};
- const metrics=[['肩',avg('shoulder')],['肘',avg('elbow')],['手首',avg('wrist')],['膝',avg('knee')],['体幹傾き',avg('trunk')]];
- summary.innerHTML=`<div class="metric"><span>保存レポート数</span><b>${list.length}</b></div><div class="metric"><span>評価選手数</span><b>${new Set(list.map(r=>r.playerName||('ID '+r.id))).size}</b></div><div class="metric"><span>最新評価</span><b style="font-size:14px">${list.length?new Date(list[0].savedAt||list[0].created||Date.now()).toLocaleDateString():'—'}</b></div>`+metrics.map(([n,v])=>`<div class="metric"><span>${n} 平均</span><b>${v===null?'—':v+'°'}</b></div>`).join('');
- if(!list.length){content.innerHTML='<div class="empty">保存済みフォームレポートはありません。動画分析タブでシュート動作を検出し、「この選手のレポートを保存」を押してください。</div>';return}
- const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- content.innerHTML=list.map((r,i)=>{const m=r.metrics||{};const good=r.comments?.good||[],bad=r.comments?.improve||[];return `<article class="card" style="margin:10px 0"><h3>${esc(r.playerName||('選手ID '+r.id))} <span class="hint">／ ${esc(r.team||'')} ／ ${Number(r.time||0).toFixed(2)}秒</span></h3><p class="hint">評価日時：${esc(new Date(r.savedAt||r.created||Date.now()).toLocaleString())}　${r.side==='left'?'左手':'右手'}</p><div class="metricgrid">${[['肩',m.shoulder],['肘',m.elbow],['手首',m.wrist],['膝',m.knee],['体幹傾き',m.trunk]].map(([n,v])=>`<div class="metric"><span>${n}</span><b>${Number.isFinite(Number(v))?Math.round(Number(v))+'°':'—'}</b></div>`).join('')}</div><div class="metricgrid"><div class="metric"><b>良い点</b><ul>${good.map(x=>`<li>${esc(x)}</li>`).join('')||'<li>評価データなし</li>'}</ul></div><div class="metric"><b>改善点</b><ul>${bad.map(x=>`<li>${esc(x)}</li>`).join('')||'<li>評価データなし</li>'}</ul></div></div>${r.image?`<details><summary>リリース直前の骨格画像を表示</summary><img src="${r.image}" alt="骨格評価画像" style="width:100%;max-width:480px;border-radius:8px;margin-top:8px"></details>`:''}<button class="no-print" onclick="downloadEvaluationItem(${i})">この評価を保存</button></article>`}).join('');
+ const all=shots.map(r=>({kind:'shot',data:r})).concat(manual.map(r=>({kind:'manual',data:r})))
+   .sort((a,b)=>new Date(b.data.savedAt||b.data.date||0)-new Date(a.data.savedAt||a.data.date||0));
+ const avg=values=>{const a=values.map(v=>v===null||v===undefined||v===''?NaN:Number(v)).filter(v=>Number.isFinite(v));return a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):null};
+ const angleValues=k=>[
+   ...shots.map(r=>r.metrics?.[k]),
+   ...(k==='elbow'?manual.map(r=>r.elbow):k==='knee'?manual.map(r=>r.knee):[])
+ ];
+ const metrics=[['肩',avg(angleValues('shoulder'))],['肘',avg(angleValues('elbow'))],['手首',avg(angleValues('wrist'))],['膝',avg(angleValues('knee'))],['体幹傾き',avg(angleValues('trunk'))]];
+ const playerNames=[...shots.map(r=>r.playerName||('選手ID '+r.id)),...manual.map(r=>r.player)];
+ summary.innerHTML=`<div class="metric"><span>評価記録合計</span><b>${all.length}</b></div><div class="metric"><span>自動シュート評価</span><b>${shots.length}</b></div><div class="metric"><span>動画角度測定</span><b>${manual.length}</b></div><div class="metric"><span>評価選手数</span><b>${new Set(playerNames.filter(Boolean)).size}</b></div><div class="metric"><span>最新評価</span><b style="font-size:14px">${all.length?new Date(all[0].data.savedAt||all[0].data.date||Date.now()).toLocaleDateString():'—'}</b></div>`+metrics.map(([n,v])=>`<div class="metric"><span>${n} 平均</span><b>${v===null?'—':v+'°'}</b></div>`).join('');
+ if(!all.length){content.innerHTML='<div class="empty">動画分析の記録はまだありません。動画分析タブで自動シュート評価を保存するか、関節位置を指定して測定記録を保存してください。</div>';return}
+ content.innerHTML=all.map(({kind,data:r},i)=>{
+   if(kind==='manual')return `<article class="card" style="margin:10px 0"><h3>${esc(r.player||'選手名未設定')} <span class="hint">／ 動画角度測定</span></h3><p class="hint">記録日時：${esc(r.date||'')}　動画時刻：${Number(r.time||0).toFixed(2)}秒</p><div class="metricgrid"><div class="metric"><span>肘</span><b>${r.elbow!==null&&r.elbow!==undefined&&Number.isFinite(Number(r.elbow))?Math.round(Number(r.elbow))+'°':'—'}</b></div><div class="metric"><span>膝</span><b>${r.knee!==null&&r.knee!==undefined&&Number.isFinite(Number(r.knee))?Math.round(Number(r.knee))+'°':'—'}</b></div></div><p class="hint">動画分析タブで保存した関節角度測定です。</p></article>`;
+   const m=r.metrics||{},good=r.comments?.good||[],bad=r.comments?.improve||[];
+   return `<article class="card" style="margin:10px 0"><h3>${esc(r.playerName||('選手ID '+r.id))} <span class="hint">／ 自動シュート評価 ／ ${esc(r.team||'')} ／ ${Number(r.time||0).toFixed(2)}秒</span></h3><p class="hint">評価日時：${esc(new Date(r.savedAt||r.created||Date.now()).toLocaleString())}　${r.side==='left'?'左手':'右手'}</p><div class="metricgrid">${[['肩',m.shoulder],['肘',m.elbow],['手首',m.wrist],['膝',m.knee],['体幹傾き',m.trunk]].map(([n,v])=>`<div class="metric"><span>${n}</span><b>${v!==null&&v!==undefined&&Number.isFinite(Number(v))?Math.round(Number(v))+'°':'—'}</b></div>`).join('')}</div><div class="metricgrid"><div class="metric"><b>良い点</b><ul>${good.map(x=>`<li>${esc(x)}</li>`).join('')||'<li>評価データなし</li>'}</ul></div><div class="metric"><b>改善点</b><ul>${bad.map(x=>`<li>${esc(x)}</li>`).join('')||'<li>評価データなし</li>'}</ul></div></div>${r.image?`<details><summary>リリース直前の骨格画像を表示</summary><img src="${r.image}" alt="骨格評価画像" style="width:100%;max-width:480px;border-radius:8px;margin-top:8px"></details>`:''}<button class="no-print" onclick="downloadEvaluationItem(${shots.indexOf(r)})">この評価を保存</button></article>`;
+ }).join('');
 }
-function exportEvaluationReport(){download('U15_選手別フォーム評価レポート.json',JSON.stringify(savedShotReports||[],null,2),'application/json')}
+function exportEvaluationReport(){download('U15_選手別フォーム評価レポート.json',JSON.stringify({automaticShotReports:savedShotReports||[],videoAngleMeasurements:videoMeasurements||[]},null,2),'application/json')}
 function downloadEvaluationItem(i){const r=(savedShotReports||[])[i];if(r)download(`U15_評価_${String(r.playerName||('ID'+r.id)).replace(/[^\wぁ-んァ-ヶ一-龠-]/g,'_')}.json`,JSON.stringify(r,null,2),'application/json')}
 window.renderEvaluationReport=renderEvaluationReport;window.exportEvaluationReport=exportEvaluationReport;window.downloadEvaluationItem=downloadEvaluationItem;
 renderSavedShotReports();renderShotEvents();
