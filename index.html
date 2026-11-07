@@ -68,7 +68,7 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
 </div>
 <div class="qbar no-print" id="quarters"></div>
 <div class="tabs no-print">
- <button class="active" data-tab="own" id="ownTabLabel">自チーム</button><button data-tab="camera">カメラ分析</button><button data-tab="videoAnalysis">動画分析</button><button data-tab="evaluationReport">評価レポート</button><button data-tab="players" id="oppPlayersTabLabel">相手選手</button><button data-tab="scout" id="oppScoutTabLabel">相手チーム</button><button data-tab="advice">対策</button><button data-tab="rotation">交代・出場時間</button><button data-tab="games">試合保存</button><button data-tab="report">分析レポート</button>
+ <button class="active" data-tab="own" id="ownTabLabel">自チーム</button><button data-tab="camera">カメラ分析</button><button data-tab="videoAnalysis">動画分析・分析レポート</button><button data-tab="players" id="oppPlayersTabLabel">相手選手</button><button data-tab="scout" id="oppScoutTabLabel">相手チーム</button><button data-tab="advice">対策</button><button data-tab="rotation">交代・出場時間</button><button data-tab="games">試合保存</button>
 </div>
 <section id="own" class="panel active">
  <div class="card"><h2 id="ownRosterHeading">自チーム選手別スタッツ</h2><p class="hint">選手名を登録し、各項目の＋を直接タップ。シュート成功は試投数と得点も自動加算します。</p><div id="ownRoster" class="roster"></div></div>
@@ -106,7 +106,7 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
 
 <section id="videoAnalysis" class="panel">
  <div class="card">
-  <h2>🎞️ 動画アップロード・複数選手フォーム分析</h2>
+  <h2>🎞️ 動画分析・試合レポート</h2>
   <p class="hint">動画はこの端末のブラウザ内で再生・AI解析します。動画ファイル自体はサーバーへ送信しません。AIプログラムと骨格モデルの読み込みにはインターネット接続が必要です（毎回の起動時に読み込みます）。動画ファイル自体は端末内で処理されます。</p>
   <label>分析する動画（端末内のファイル）</label><input id="analysisVideoFile" type="file" accept="video/*">
   <div id="analysisVideoName" class="hint">動画が選択されていません</div>
@@ -117,6 +117,16 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
   </div>
   <div class="card" style="margin-top:12px"><h3>動画を見ながら得点を記録</h3><p class="hint">再生を一時停止して得点が入った場面でタップしてください。動画時刻・Q・得点を記録し、分析レポートへ反映します。</p><div class="metricgrid"><div class="metric"><b id="videoOwnScoreNow">0</b><span id="videoOwnNameNow">自チーム</span><div class="actions"><button onclick="addVideoScore('own',1)">＋1</button><button onclick="addVideoScore('own',2)">＋2</button><button onclick="addVideoScore('own',3)">＋3</button></div></div><div class="metric"><b id="videoOppScoreNow">0</b><span id="videoOppNameNow">対戦相手</span><div class="actions"><button onclick="addVideoScore('opp',1)">＋1</button><button onclick="addVideoScore('opp',2)">＋2</button><button onclick="addVideoScore('opp',3)">＋3</button></div></div></div><div id="videoScoreEventList" class="tablewrap"></div></div>
   <p class="hint" id="analysisVideoStatus">動画を選択してください。動画は端末内で扱い、ファイルを外部送信しません。</p>
+ </div>
+ <div class="card" id="geminiVideoCard">
+  <h2>🤖 Gemini動画AI分析（無料モデル固定）</h2>
+  <p class="hint">選択中の試合動画をGoogle Geminiへ送信し、映像を確認させます。チームの約束事の達成・未達成、良かった場面、改善点、スコアボードの得点を分析します。使用モデルは無料枠対象の gemini-2.5-flash-lite に固定し、有料モデルへの自動切替は行いません。無料枠の上限に達した場合は停止します。</p>
+  <label>Gemini APIキー（この画面でのみ使用。端末やGitHubには保存しません）</label>
+  <input id="geminiApiKey" type="password" autocomplete="off" placeholder="Google AI Studioで取得したAPIキー">
+  <p class="hint">APIキー取得：<a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>。課金を完全に避けるには、Google側で請求先を有効化せず無料枠プロジェクトのまま利用してください。アプリは有料モデルへ切り替えませんが、Google側の請求設定そのものは変更・制御できません。無料枠では送信データがGoogleのサービス改善に利用される場合があります。選手動画は必要な同意を得て使用してください。</p>
+  <div class="actions"><button class="primary" id="geminiAnalyzeBtn" onclick="runGeminiVideoAnalysis()">動画をGeminiで分析</button><button onclick="clearGeminiResult()">AI分析結果を消去</button></div>
+  <div id="geminiProgress" class="hint">動画を選択し、APIキーを入力して分析を開始してください。</div>
+  <div id="geminiResultView"><div class="empty">Geminiによる動画分析結果はここに表示されます。</div></div>
  </div>
  <div class="card">
   <h2>🤖 AI複数選手・骨格自動検出</h2>
@@ -295,6 +305,7 @@ function renderReport(){
  <div class="report-section"><h3>${esc(state.oppName)}のチーム傾向</h3><p>${Object.entries(groups).map(([g,items])=>items.map(([l,k])=>`${l} ${state.team[k]||0}回`).join(' ／ ')).join(' ／ ')}</p><div class="tablewrap"><table class="printtable"><tr><th>相手選手</th><th>右D</th><th>左D</th><th>3P成功/試投</th><th>ゴール下</th><th>TO</th></tr>${oppRows}</table></div></div>
  <div class="report-section"><h3>次戦への対策候補</h3>${rec.map(r=>`<div class="rec ${r.high?'high':''}"><b>${esc(r.title)}</b><p>${esc(r.detail)}</p></div>`).join('')||'<p>対策候補はまだありません。</p>'}</div>`;
  appendVideoReviewToReport();
+ appendGeminiAIToReport();
 }
 
 // --- Offline promise review and video-timestamped score logging ---
@@ -408,8 +419,74 @@ function renderQuarterButtons(){let el=document.getElementById('quarters');if(el
  input.addEventListener('change',e=>{state[id==='ownName'?'ownName':'oppName']=e.target.value.trim()||(id==='ownName'?'自チーム':'対戦相手');persist();});
 });
 renderQuarterButtons();
-document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));if(b.dataset.tab==='report')renderReport();if(b.dataset.tab==='camera')renderCameraAnalysis()}));
-render();renderRotation();renderGames();updateClock();renderPromiseReview();renderVideoScoreEvents();
+// 動画分析・評価レポート・試合レポートを1つのタブに統合
+const videoPanel=document.getElementById('videoAnalysis');
+['evaluationReport','report'].forEach(id=>{const section=document.getElementById(id);if(section){const card=section.querySelector('.card');if(card)videoPanel.appendChild(card);section.remove()}});
+const videoTab=document.querySelector('[data-tab="videoAnalysis"]');if(videoTab)videoTab.textContent='動画分析・分析レポート';
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));if(b.dataset.tab==='videoAnalysis'){renderReport();renderGeminiResult()}if(b.dataset.tab==='camera')renderCameraAnalysis()}));
+render();renderRotation();renderGames();updateClock();renderPromiseReview();renderVideoScoreEvents();renderGeminiResult();
+
+// --- Gemini video understanding: free-tier model only, no paid-model fallback ---
+const GEMINI_FREE_MODEL='gemini-2.5-flash-lite';
+var geminiVideoResult=null;
+try{geminiVideoResult=JSON.parse(localStorage.getItem('u15_gemini_video_analysis_v1')||'null')}catch(e){geminiVideoResult=null}
+function geminiStatus(message){const el=document.getElementById('geminiProgress');if(el)el.textContent=message}
+function geminiJsonFromText(text){let t=String(text||'').trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');try{return JSON.parse(t)}catch(e){const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a>=0&&b>a)return JSON.parse(t.slice(a,b+1));throw new Error('AIの返答をJSONとして読み取れませんでした')}}
+function geminiPrompt(){const rules=(promiseData.rules||[]).map((r,i)=>({id:r.id,rule:r.text}));return `あなたはU15バスケットボールの試合映像を分析するアシスタントです。動画全体を確認し、映像で直接確認できる事実だけを報告してください。推測で選手の意図やプレー結果を断定しないでください。\n自チーム: ${state.ownName}\n対戦相手: ${state.oppName}\nチームの約束事: ${JSON.stringify(rules)}\n\n次のJSONだけを返してください。\n{\n "summary":"試合全体の短い総評",\n "strengths":[{"timestamp_seconds":0,"observation":"映像で確認した良い点","why_good":"なぜ良いか"}],\n "improvements":[{"timestamp_seconds":0,"promise_rule":"関連する約束事。なければ空文字","observation":"映像で確認した改善点","cause":"映像から言える原因。断定できなければ可能性と明記","action":"具体的な修正方法"}],\n "promise_reviews":[{"rule":"登録された約束事の文言","status":"達成|未達成|判定不能","timestamp_seconds":0,"evidence":"映像で確認した根拠","comment":"評価コメント","improvement":"未達成時の改善方法"}],\n "scoreboard":{"visible":true,"final":{"own":0,"opponent":0},"quarters":[{"quarter":1,"own":0,"opponent":0}],"confidence":"高|中|低","notes":"スコアボードの視認性や読み取り上の注意"},\n "scoring_events":[{"timestamp_seconds":0,"quarter":1,"team":"own|opponent","points":2,"confidence":"高|中|低"}],\n "cautions":["映像から判断できない点や分析上の制約"]\n}\n\n重要: 約束事は各ルールごとに動画内で実行場面を探し、確認できる場面がなければ判定不能にしてください。達成・未達成の根拠となる時刻を秒で示してください。スコアボードが映っていない、数字が読めない、Qが不明な場合はvisible=falseまたはconfidence=低とし、得点を創作しないでください。scoring_eventsは得点変化が映像から確認できる場合だけ記載してください。得点のチーム名は自チームならown、相手ならopponentです。`}
+async function geminiUploadVideo(file,key){
+ const start=await fetch('https://generativelanguage.googleapis.com/upload/v1beta/files',{method:'POST',headers:{'x-goog-api-key':key,'X-Goog-Upload-Protocol':'resumable','X-Goog-Upload-Command':'start','X-Goog-Upload-Header-Content-Length':String(file.size),'X-Goog-Upload-Header-Content-Type':file.type||'video/mp4','Content-Type':'application/json'},body:JSON.stringify({file:{display_name:file.name}})});
+ if(!start.ok)throw new Error('Googleへのアップロード開始に失敗しました（'+start.status+'）。APIキー・無料枠・通信を確認してください。');
+ const uploadUrl=start.headers.get('x-goog-upload-url')||start.headers.get('X-Goog-Upload-URL');if(!uploadUrl)throw new Error('GoogleからアップロードURLを取得できませんでした。ブラウザの通信制限の可能性があります。');
+ const uploaded=await fetch(uploadUrl,{method:'POST',headers:{'X-Goog-Upload-Offset':'0','X-Goog-Upload-Command':'upload, finalize','Content-Length':String(file.size)},body:file});
+ if(!uploaded.ok)throw new Error('動画アップロードに失敗しました（'+uploaded.status+'）。無料枠の動画サイズ上限は2GBです。');
+ const uploadedData=await uploaded.json();return uploadedData.file||uploadedData;
+}
+async function waitGeminiFileActive(file,key){let current=file;for(let i=0;i<60;i++){if(current.state==='ACTIVE')return current;if(current.state==='FAILED')throw new Error('Google側で動画の処理に失敗しました。');await new Promise(r=>setTimeout(r,3000));const name=current.name;if(!name)break;const res=await fetch('https://generativelanguage.googleapis.com/v1beta/'+name,{headers:{'x-goog-api-key':key}});if(!res.ok)throw new Error('動画の処理状態を確認できません（'+res.status+'）。');current=await res.json()}throw new Error('動画処理が時間内に完了しませんでした。動画を短くして再試行してください。')}
+async function runGeminiVideoAnalysis(){
+ const file=document.getElementById('analysisVideoFile')?.files?.[0],key=(document.getElementById('geminiApiKey')?.value||'').trim(),btn=document.getElementById('geminiAnalyzeBtn');
+ if(!file){toast('先に試合動画を選択してください');return}if(!key){toast('Gemini APIキーを入力してください');return}if(file.size>2*1024*1024*1024){toast('無料枠の動画上限2GBを超えています');return}
+ btn.disabled=true;let remoteFile=null;
+ try{
+  geminiStatus('1/3 Googleへ動画をアップロードしています…');
+  remoteFile=await geminiUploadVideo(file,key);
+  geminiStatus('2/3 Google側で動画を処理しています…');
+  remoteFile=await waitGeminiFileActive(remoteFile,key);
+  geminiStatus('3/3 '+GEMINI_FREE_MODEL+'（無料枠モデル）で試合映像を分析しています…');
+  const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+GEMINI_FREE_MODEL+':generateContent',{method:'POST',headers:{'x-goog-api-key':key,'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{file_data:{mime_type:remoteFile.mimeType||file.type||'video/mp4',file_uri:remoteFile.uri}},{text:geminiPrompt()}]}],generationConfig:{responseMimeType:'application/json',temperature:0.2}})});
+  if(!response.ok){let detail='';try{detail=(await response.json()).error?.message||''}catch(e){}if(response.status===429)throw new Error('無料枠の利用上限に達した可能性があります。有料モデルへの切替は行いません。時間をおいて再試行してください。');throw new Error('Gemini分析に失敗しました（'+response.status+'）。'+detail)}
+  const data=await response.json(),raw=(data.candidates?.[0]?.content?.parts||[]).map(x=>x.text||'').join('\n');
+  if(!raw)throw new Error('Geminiから分析結果が返りませんでした。');
+  geminiVideoResult={createdAt:new Date().toISOString(),fileName:file.name,model:GEMINI_FREE_MODEL,result:geminiJsonFromText(raw)};
+  localStorage.setItem('u15_gemini_video_analysis_v1',JSON.stringify(geminiVideoResult));
+  renderGeminiResult();renderReport();geminiStatus('分析完了。AI評価と得点情報を下の分析レポートへ反映しました。');toast('Gemini動画分析が完了しました');
+ }catch(e){console.error(e);geminiStatus('分析停止：'+(e.message||e));toast('動画AI分析に失敗しました')}
+ finally{if(remoteFile?.name){try{await fetch('https://generativelanguage.googleapis.com/v1beta/'+remoteFile.name,{method:'DELETE',headers:{'x-goog-api-key':key}})}catch(e){}}btn.disabled=false}
+}
+function clearGeminiResult(){if(!confirm('保存済みのGemini動画分析結果を消去しますか？'))return;geminiVideoResult=null;localStorage.removeItem('u15_gemini_video_analysis_v1');renderGeminiResult();renderReport();geminiStatus('保存済みのAI分析結果を消去しました。')}
+function geminiTime(t){if(!Number.isFinite(Number(t)))return '時刻不明';return stamp(Number(t))}
+function renderGeminiResult(){const el=document.getElementById('geminiResultView');if(!el)return;if(!geminiVideoResult?.result){el.innerHTML='<div class="empty">Geminiによる動画分析結果はここに表示されます。</div>';return}const r=geminiVideoResult.result||{},arr=x=>Array.isArray(x)?x:[];let html='<p class="hint">分析日時：'+esc(new Date(geminiVideoResult.createdAt).toLocaleString('ja-JP'))+' ／ モデル：'+esc(geminiVideoResult.model)+' ／ 動画：'+esc(geminiVideoResult.fileName)+'</p><div class="report-section"><h3>AI総評</h3><p>'+esc(r.summary||'総評なし')+'</p></div>';
+ html+='<div class="report-section"><h3>良かったプレー</h3>'+ (arr(r.strengths).length?arr(r.strengths).map(x=>'<div class="rec"><b>'+geminiTime(x.timestamp_seconds)+'</b><p>'+esc(x.observation||'')+'</p><p>'+esc(x.why_good||'')+'</p></div>').join(''):'<p>明確に確認できた良い場面はありません。</p>')+'</div>';
+ html+='<div class="report-section"><h3>約束事の達成・未達成</h3>'+ (arr(r.promise_reviews).length?arr(r.promise_reviews).map(x=>'<div class="rec '+(x.status==='未達成'?'high':'')+'"><b>'+esc(x.rule||'約束事')+' ／ '+esc(x.status||'判定不能')+' ／ '+geminiTime(x.timestamp_seconds)+'</b><p>根拠：'+esc(x.evidence||'')+'</p><p>'+esc(x.comment||'')+'</p><p>改善：'+esc(x.improvement||'')+'</p></div>').join(''):'<p>約束事の評価結果はありません。映像内で確認できなかった可能性があります。</p>')+'</div>';
+ html+='<div class="report-section"><h3>改善ポイント</h3>'+ (arr(r.improvements).length?arr(r.improvements).map(x=>'<div class="rec high"><b>'+geminiTime(x.timestamp_seconds)+' '+esc(x.promise_rule||'')+'</b><p>'+esc(x.observation||'')+'</p><p>原因候補：'+esc(x.cause||'')+'</p><p>改善案：'+esc(x.action||'')+'</p></div>').join(''):'<p>明確な改善ポイントは抽出されませんでした。</p>')+'</div>';
+ const sb=r.scoreboard||{};html+='<div class="report-section"><h3>動画から読み取った得点</h3><p>スコアボード：'+(sb.visible?'確認':'確認できず')+' ／ 信頼度：'+esc(sb.confidence||'不明')+'</p>';
+ if(sb.final&&Number.isFinite(Number(sb.final.own))&&Number.isFinite(Number(sb.final.opponent)))html+='<p><b>最終スコア候補：'+esc(state.ownName)+' '+Number(sb.final.own)+' - '+Number(sb.final.opponent)+' '+esc(state.oppName)+'</b></p>';
+ if(arr(sb.quarters).length)html+='<table class="printtable"><tr><th>Q</th><th>'+esc(state.ownName)+'</th><th>'+esc(state.oppName)+'</th></tr>'+arr(sb.quarters).map(x=>'<tr><td>'+esc(x.quarter)+'Q</td><td>'+Number(x.own||0)+'</td><td>'+Number(x.opponent||0)+'</td></tr>').join('')+'</table>';
+ if(arr(r.scoring_events).length)html+='<h4>映像から確認した得点場面</h4><table class="printtable"><tr><th>時刻</th><th>Q</th><th>チーム</th><th>点</th><th>信頼度</th></tr>'+arr(r.scoring_events).map(x=>'<tr><td>'+geminiTime(x.timestamp_seconds)+'</td><td>'+Number(x.quarter||0)+'Q</td><td>'+((x.team==='own')?esc(state.ownName):esc(state.oppName))+'</td><td>+'+Number(x.points||0)+'</td><td>'+esc(x.confidence||'不明')+'</td></tr>').join('')+'</table>';
+ html+='<p>'+esc(sb.notes||'')+'</p><p class="hint">※AIの読み取り候補です。数字が不鮮明な場合は必ず動画と照合してください。</p>';
+ if(arr(sb.quarters).length)html+='<div class="actions"><button class="primary" onclick="applyGeminiScores()">このQ別得点を試合レポートへ反映</button></div>';
+ html+='</div>';
+ if(arr(r.cautions).length)html+='<div class="report-section"><h3>分析上の注意</h3><ul>'+arr(r.cautions).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div>';
+ el.innerHTML=html;
+}
+function applyGeminiScores(){const q=geminiVideoResult?.result?.scoreboard?.quarters;if(!Array.isArray(q)||!q.length){toast('反映できるQ別得点がありません');return}if(!confirm('AIが読み取ったQ別得点で、現在の試合のQ別得点を置き換えます。動画と照合しましたか？'))return;const own=[0,0,0,0,0],opp=[0,0,0,0,0];q.forEach(x=>{const i=Math.max(0,Math.min(4,Number(x.quarter)-1));own[i]=Math.max(0,Number(x.own)||0);opp[i]=Math.max(0,Number(x.opponent)||0)});snapshot();state.ownQ=own;state.oppQ=opp;persist();renderVideoScoreEvents();toast('AI読み取り得点を試合レポートへ反映しました')}
+function appendGeminiAIToReport(){const el=document.getElementById('reportContent');if(!el||!geminiVideoResult?.result)return;const r=geminiVideoResult.result,arr=x=>Array.isArray(x)?x:[],sb=r.scoreboard||{};let h='<div class="report-section"><h3>Gemini AI動画評価</h3><p>'+esc(r.summary||'')+'</p>';
+ h+='<h4>約束事の達成状況</h4>'+(arr(r.promise_reviews).length?'<table class="printtable"><tr><th>約束事</th><th>判定</th><th>時刻</th><th>コメント</th></tr>'+arr(r.promise_reviews).map(x=>'<tr><td>'+esc(x.rule||'')+'</td><td>'+esc(x.status||'判定不能')+'</td><td>'+geminiTime(x.timestamp_seconds)+'</td><td>'+esc(x.comment||x.improvement||'')+'</td></tr>').join('')+'</table>':'<p>AI評価データなし</p>');
+ h+='<h4>良かった点</h4><ul>'+arr(r.strengths).map(x=>'<li>'+geminiTime(x.timestamp_seconds)+' '+esc(x.observation||'')+' '+esc(x.why_good||'')+'</li>').join('')+'</ul><h4>改善ポイント</h4><ul>'+arr(r.improvements).map(x=>'<li>'+geminiTime(x.timestamp_seconds)+' '+esc(x.observation||'')+' 改善：'+esc(x.action||'')+'</li>').join('')+'</ul>';
+ if(sb.final)h+='<p><b>動画AIの最終スコア候補：'+esc(state.ownName)+' '+Number(sb.final.own||0)+' - '+Number(sb.final.opponent||0)+' '+esc(state.oppName)+'</b>（信頼度 '+esc(sb.confidence||'不明')+'）</p>';
+ if(arr(sb.quarters).length)h+='<table class="printtable"><tr><th>Q</th><th>自チーム</th><th>相手</th></tr>'+arr(sb.quarters).map(x=>'<tr><td>'+esc(x.quarter)+'Q</td><td>'+Number(x.own||0)+'</td><td>'+Number(x.opponent||0)+'</td></tr>').join('')+'</table>';
+ h+='<p class="hint">AIによる動画認識結果です。判定不能・低信頼度の箇所は映像で再確認してください。</p></div>';el.insertAdjacentHTML('beforeend',h)}
+// 初回表示時に端末へ保存済みのGemini結果を復元
+renderGeminiResult();renderReport();
 </script>
 <script>
 if('serviceWorker' in navigator && location.protocol!=='file:'){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
