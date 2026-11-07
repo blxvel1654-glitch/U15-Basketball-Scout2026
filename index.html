@@ -79,6 +79,14 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
  </div>
  <div class="card"><h2>🏆 得点ランキング TOP 3</h2><div id="statsTopPoints" class="metricgrid"></div></div>
  <div class="card"><h2>💪 リバウンドランキング TOP 3</h2><div id="statsTopRebounds" class="metricgrid"></div></div>
+ <div class="card"><h2>🎯 アシストランキング TOP 3</h2><div id="statsTopAssists" class="metricgrid"></div></div>
+ <div class="card">
+  <h2>🤖 スタッツAI評価</h2>
+  <p class="hint">入力された試合スタッツから、良いところ・改善点・総評を自動生成します。出場時間やポゼッションを考慮した高度な効率指標ではなく、記録値に基づく簡易評価です。</p>
+  <div class="metricgrid" id="statsAIEvaluation">
+   <div class="empty">スタッツを入力すると評価が表示されます。</div>
+  </div>
+ </div>
  <div class="card"><h2>選手別スタッツ一覧</h2><div id="statsPlayerTable" class="tablewrap"></div></div>
 </section>
 <section id="camera" class="panel">
@@ -502,23 +510,46 @@ function playerStats(p){
  const reb=(p.or||0)+(p.dr||0);
  const fgm=(p.p2m||0)+(p.p3m||0), fga=(p.p2m||0)+(p.p2a||0)+(p.p3m||0)+(p.p3a||0);
  const fg=fga?(fgm/fga*100):0;
- return {pts,reb,oreb:p.or||0,dreb:p.dr||0,fgm,fga,threeM:p.p3m||0,threeA:(p.p3m||0)+(p.p3a||0),ftm:p.ftm||0,fta:(p.ftm||0)+(p.fta||0),fg};
+ return {pts,reb,oreb:p.or||0,dreb:p.dr||0,fgm,fga,threeM:p.p3m||0,threeA:(p.p3m||0)+(p.p3a||0),ftm:p.ftm||0,fta:(p.ftm||0)+(p.fta||0),ast:p.ast||0,to:p.to||0,fg};
 }
 function renderStats(){
- const active=state.own.filter(p=>p.name||playerStats(p).pts||playerStats(p).reb||playerStats(p).fga||playerStats(p).fta);
+ const active=state.own.filter(p=>p.name||Object.values(playerStats(p)).some(v=>Number(v)>0));
  const all=state.own.map(p=>({p,...playerStats(p)}));
- const team=all.reduce((a,x)=>{for(const k of ['pts','reb','oreb','dreb','fgm','fga','threeM','threeA','ftm','fta'])a[k]+=x[k];return a;},{pts:0,reb:0,oreb:0,dreb:0,fgm:0,fga:0,threeM:0,threeA:0,ftm:0,fta:0});
+ const team=all.reduce((a,x)=>{for(const k of ['pts','reb','oreb','dreb','fgm','fga','threeM','threeA','ftm','fta','ast','to'])a[k]+=x[k];return a;},{pts:0,reb:0,oreb:0,dreb:0,fgm:0,fga:0,threeM:0,threeA:0,ftm:0,fta:0,ast:0,to:0});
  const pct=(m,a)=>a?(m/a*100).toFixed(1)+'%':'—';
  const summary=document.getElementById('statsTeamSummary');
  if(!summary)return;
- summary.innerHTML=[['PTS',team.pts],['REB',team.reb],['OREB',team.oreb],['DREB',team.dreb],['FGM / FGA',`${team.fgm} / ${team.fga}`],['3PM / 3PA',`${team.threeM} / ${team.threeA}`],['FTM / FTA',`${team.ftm} / ${team.fta}`],['FG%',pct(team.fgm,team.fga)]].map(([k,v])=>`<div class="metric"><span>${k}</span><b>${v}</b></div>`).join('');
+ summary.innerHTML=[['PTS',team.pts],['REB',team.reb],['OREB',team.oreb],['DREB',team.dreb],['AST',team.ast],['FGM / FGA',`${team.fgm} / ${team.fga}`],['3PM / 3PA',`${team.threeM} / ${team.threeA}`],['FTM / FTA',`${team.ftm} / ${team.fta}`],['FG%',pct(team.fgm,team.fga)]].map(([k,v])=>`<div class="metric"><span>${k}</span><b>${v}</b></div>`).join('');
  const top=key=>all.filter(x=>x.p.name||x[key]>0).sort((a,b)=>b[key]-a[key]).slice(0,3);
- const pts=document.getElementById('statsTopPoints'), reb=document.getElementById('statsTopRebounds');
- const pointTop=top('pts'), reboundTop=top('reb');
+ const pts=document.getElementById('statsTopPoints'), reb=document.getElementById('statsTopRebounds'), ast=document.getElementById('statsTopAssists');
+ const pointTop=top('pts'), reboundTop=top('reb'), assistTop=top('ast');
  if(pts)pts.innerHTML=pointTop.length?pointTop.map((x,i)=>`<div class="metric"><span>${i+1}位　${esc(x.p.no)} ${esc(x.p.name||'選手名未登録')}</span><b>${x.pts} PTS</b></div>`).join(''):'<div class="empty">得点記録がありません</div>';
  if(reb)reb.innerHTML=reboundTop.length?reboundTop.map((x,i)=>`<div class="metric"><span>${i+1}位　${esc(x.p.no)} ${esc(x.p.name||'選手名未登録')}</span><b>${x.reb} REB</b><small>OREB ${x.oreb} / DREB ${x.dreb}</small></div>`).join(''):'<div class="empty">リバウンド記録がありません</div>';
+ if(ast)ast.innerHTML=assistTop.length?assistTop.map((x,i)=>`<div class="metric"><span>${i+1}位　${esc(x.p.no)} ${esc(x.p.name||'選手名未登録')}</span><b>${x.ast} AST</b></div>`).join(''):'<div class="empty">アシスト記録がありません</div>';
+
+ // Simple rule-based coaching feedback from recorded box-score totals.
+ const fgPct=team.fga?team.fgm/team.fga*100:null;
+ const threePct=team.threeA?team.threeM/team.threeA*100:null;
+ const ftPct=team.fta?team.ftm/team.fta*100:null;
+ const good=[], improve=[];
+ if(team.ast>=Math.max(3,team.to)) good.push(`アシスト${team.ast}に対してターンオーバー${team.to}。パスから味方の得点機会を作れている点が良いところです。`);
+ else if(team.ast>0) good.push(`アシストを${team.ast}記録。味方を使って得点につなげたプレーが見られます。`);
+ if(fgPct!==null&&fgPct>=45) good.push(`FG成功率${fgPct.toFixed(1)}%。シュートを得点に結びつける効率が良好です。`);
+ if(threePct!==null&&threePct>=33) good.push(`3P成功率${threePct.toFixed(1)}%。外角からも得点源を作れています。`);
+ if(ftPct!==null&&ftPct>=70) good.push(`FT成功率${ftPct.toFixed(1)}%。フリースローを安定して得点にできています。`);
+ if(team.reb>0&&team.oreb>0) good.push(`リバウンド${team.reb}本のうちORが${team.oreb}本。攻撃機会をつなげています。`);
+ if(team.to>team.ast) improve.push(`TO${team.to}がAST${team.ast}を上回っています。パスを出す前に味方と守備位置を確認し、無理な判断を減らしましょう。`);
+ if(fgPct!==null&&fgPct<40) improve.push(`FG成功率${fgPct.toFixed(1)}%。リング周辺での選択、パスをもう1本つなぐ判断、シュートの質を見直しましょう。`);
+ if(threePct!==null&&threePct<30) improve.push(`3P成功率${threePct.toFixed(1)}%。打つ位置とタイミングを選び、オープンな状態を作ってから打つ意識が必要です。`);
+ if(ftPct!==null&&ftPct<60) improve.push(`FT成功率${ftPct.toFixed(1)}%。試合を想定したルーティンでフリースローの再現性を高めましょう。`);
+ if(team.reb>0&&team.dreb<team.oreb) improve.push(`DREB${team.dreb}本に対しOREB${team.oreb}本。守備リバウンド後の確保とボックスアウトをチームで徹底しましょう。`);
+ if(!good.length)good.push('記録された数値だけでは明確な強みを断定できません。得点・アシスト・リバウンドの記録を継続し、強みを確認しましょう。');
+ if(!improve.length)improve.push('大きな課題は数値から明確には見えません。出場時間や相手の守備強度も確認し、次の試合でも同じ成果を再現できるか確認しましょう。');
+ const summaryText=`チーム合計は${team.pts}得点、${team.reb}リバウンド、${team.ast}アシスト。FGは${team.fgm}/${team.fga}（${pct(team.fgm,team.fga)}）、3Pは${team.threeM}/${team.threeA}（${pct(team.threeM,team.threeA)}）、FTは${team.ftm}/${team.fta}（${pct(team.ftm,team.fta)}）でした。${team.to}ターンオーバーも踏まえ、良かった攻撃の形を継続しつつ、シュート選択とボール保持時の判断を改善しましょう。個人別の出場時間・相手の強度・ポゼッション数は未考慮のため、映像と合わせて評価してください。`;
+ const ai=document.getElementById('statsAIEvaluation');
+ if(ai)ai.innerHTML=`<div class="metric"><b>良いところ</b><p>${good.map(esc).join('<br>')}</p></div><div class="metric"><b>改善点</b><p>${improve.map(esc).join('<br>')}</p></div><div class="metric" style="grid-column:1/-1"><b>総評（約200文字）</b><p>${esc(summaryText)}</p></div>`;
  const table=document.getElementById('statsPlayerTable');
- if(table)table.innerHTML=`<table class="printtable"><tr><th>No.</th><th>選手</th><th>PTS</th><th>REB</th><th>OREB</th><th>DREB</th><th>FGM/FGA</th><th>3PM/3PA</th><th>FTM/FTA</th><th>FG%</th></tr>${active.map(p=>{const x=playerStats(p);return `<tr><td>${esc(p.no)}</td><td>${esc(p.name||'—')}</td><td>${x.pts}</td><td>${x.reb}</td><td>${x.oreb}</td><td>${x.dreb}</td><td>${x.fgm}/${x.fga}</td><td>${x.threeM}/${x.threeA}</td><td>${x.ftm}/${x.fta}</td><td>${pct(x.fgm,x.fga)}</td></tr>`}).join('')}</table>`;
+ if(table)table.innerHTML=`<table class="printtable"><tr><th>No.</th><th>選手</th><th>PTS</th><th>REB</th><th>OREB</th><th>DREB</th><th>AST</th><th>FGM/FGA</th><th>3PM/3PA</th><th>FTM/FTA</th><th>FG%</th></tr>${active.map(p=>{const x=playerStats(p);return `<tr><td>${esc(p.no)}</td><td>${esc(p.name||'—')}</td><td>${x.pts}</td><td>${x.reb}</td><td>${x.oreb}</td><td>${x.dreb}</td><td>${x.ast}</td><td>${x.fgm}/${x.fga}</td><td>${x.threeM}/${x.threeA}</td><td>${x.ftm}/${x.fta}</td><td>${pct(x.fgm,x.fga)}</td></tr>`}).join('')}</table>`;
 }
 function render(){renderQuarterButtons();renderCameraAnalysis();renderHeader();renderRoster();renderTotals();renderStats();document.getElementById('attackMetrics').innerHTML=metricsHTML('attack');document.getElementById('defenseMetrics').innerHTML=metricsHTML('defense');document.getElementById('otherMetrics').innerHTML=metricsHTML('other');renderReport();renderRotation();renderGames();localStorage.setItem(STORE,JSON.stringify(state))}
 function exportJSON(){download('U15_scout_backup.json',JSON.stringify(state,null,2),'application/json')}
