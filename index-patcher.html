@@ -13,6 +13,6 @@ document.getElementById('go').onclick=async()=>{
  }
  const blob=new Blob([s],{type:'text/html;charset=utf-8'}),u=URL.createObjectURL(blob),a=document.createElement('a');
  a.href=u;a.download='index.html';a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);
- m.textContent='更新済みindex.htmlを作成しました。GitHubのmain直下にあるindex.htmlをこのファイルで置き換えてください。';
+ m.textContent='更新済みindex.htmlを作成しました。GitHubのmain直下にあるindex.htmlをこのファイルで置き換えてください。交代・出場時間タブはアプリ起動時に非表示化され、戦術分析タブが追加されます。';
 };
 </script></html>
