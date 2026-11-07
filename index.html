@@ -64,7 +64,7 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
 </div>
 <div class="qbar no-print" id="quarters"></div>
 <div class="tabs no-print">
- <button class="active" data-tab="own" id="ownTabLabel">自チーム</button><button data-tab="camera" id="cameraTabLabel">カメラ分析</button><button data-tab="videoAnalysis">動画分析</button><button data-tab="players" id="oppPlayersTabLabel">相手選手</button><button data-tab="scout" id="oppScoutTabLabel">相手チーム</button><button data-tab="advice">対策</button><button data-tab="rotation">交代・出場時間</button><button data-tab="games">試合保存</button><button data-tab="report">試合レポート</button>
+ <button class="active" data-tab="own" id="ownTabLabel">自チーム</button><button data-tab="camera" id="cameraTabLabel">カメラ分析</button><button data-tab="videoAnalysis">動画分析</button><button data-tab="tacticalReview">試合戦術分析</button><button data-tab="players" id="oppPlayersTabLabel">相手選手</button><button data-tab="scout" id="oppScoutTabLabel">相手チーム</button><button data-tab="advice">対策</button><button data-tab="rotation">交代・出場時間</button><button data-tab="games">試合保存</button><button data-tab="report">試合レポート</button>
 </div>
 <section id="own" class="panel active">
  <div class="card"><h2 id="ownRosterHeading">自チーム選手別スタッツ</h2><p class="hint">選手名を登録し、各項目の＋を直接タップ。シュート成功は試投数と得点も自動加算します。</p><div id="ownRoster" class="roster"></div></div>
@@ -152,6 +152,47 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
   <div id="playReviewList"><div class="empty">分析結果はまだありません</div></div>
  </div>
 
+</section>
+
+
+<section id="tacticalReview" class="panel">
+ <div class="card">
+  <h2>🎥 試合動画・オフェンス／ディフェンス戦術レビュー</h2>
+  <p class="hint">動画分析タブで読み込んだ動画の再生位置を取り込み、場面ごとに評価を保存します。タイムスタンプは動画の再生時間から自動取得します。画面内の選手の位置関係やボールの動きをコーチが確認し、事実に基づいて記録してください。現在の骨格AIだけではスクリーン、パス成功、ヘルプ判断、得点結果を確実に識別できないため、それらを自動判定したとは表示しません。</p>
+  <div class="metricgrid">
+   <div class="metric"><span>動画の現在位置</span><b id="tacticalCurrentTime">0:00</b></div>
+   <div class="metric"><span>登録した場面</span><b id="tacticalCount">0</b></div>
+  </div>
+  <div class="actions">
+   <button class="primary" onclick="captureTacticalTime()">動画の現在位置を取り込む</button>
+   <button onclick="openVideoAnalysisTab()">動画分析タブへ戻る</button>
+  </div>
+  <label>判定</label>
+  <select id="tacticalType">
+   <option value="good">良いプレー（オフェンスの成功要因）</option>
+   <option value="improve">改善が必要（ディフェンスの課題）</option>
+  </select>
+  <label>場面・プレー内容</label>
+  <input id="tacticalScene" placeholder="例：右ウイングからドライブ、ヘルプが遅れた">
+  <label>詳細な理由（何が起きたか／なぜ良い・悪いか）</label>
+  <textarea id="tacticalReason" rows="3" placeholder="例：ボールマンとの間合いが広く、ドライブの進行方向に先回りできなかった。"></textarea>
+  <label>次のアクション・具体的な修正</label>
+  <textarea id="tacticalAction" rows="2" placeholder="例：ドライブ開始前に半歩下がって構え、胸で進行コースに入る。"></textarea>
+  <div class="actions"><button class="primary" onclick="saveTacticalScene()">この場面を保存</button><button onclick="exportTacticalReview()">分析レポートをJSON保存</button><button onclick="exportTacticalCSV()">CSV保存</button></div>
+ </div>
+ <div class="card">
+  <h2>分析観点チェック</h2>
+  <div class="metricgrid">
+   <div class="metric"><b>ディフェンス</b><p>スタンス幅・重心・クロスステップ・スクリーン対応・プレッシャー・間合い・ドライブへのコース取り・手の使い方・ヘルプ・ローテーション</p></div>
+   <div class="metric"><b>オフェンス</b><p>スペーシング・ドライブ／パス判断・スクリーン活用・パスの精度とタイミング・シュートまでの連携</p></div>
+  </div>
+  <p class="hint">最大10場面をレポートに表示します。場面が10件未満の場合は登録分のみ表示します。</p>
+ </div>
+ <div class="card">
+  <h2>保存した場面レビュー（最大10件）</h2>
+  <div id="tacticalReviewStatus" class="metric">まだ場面が登録されていません。</div>
+  <div id="tacticalReviewList"><div class="empty">動画を再生し、場面ごとに現在位置を取り込んで評価を保存してください。</div></div>
+ </div>
 </section>
 
 <section id="players" class="panel">
@@ -542,6 +583,91 @@ function clearAutoPoseLog(){if(!confirm('AI分析の集計記録を消去しま�
 window.initAutoPose=initAutoPose;window.startAutoPose=startAutoPose;window.stopAutoPose=stopAutoPose;window.exportAutoPoseCSV=exportAutoPoseCSV;window.clearAutoPoseLog=clearAutoPoseLog;
 const aiFile=document.getElementById('analysisVideoFile');if(aiFile)aiFile.addEventListener('change',()=>{stopAutoPose();autoPoseLastTime=-1;autoPoseTracks.clear();autoPoseNextId=1;autoPoseFrames=0;shotHistories.clear();shotEvents=[];shotLastDetected.clear();latestPlayReview=[];document.getElementById('playReviewStatus').textContent='新しい動画を選択しました。AI検出後に分析してください。';document.getElementById('playReviewList').innerHTML='<div class="empty">分析結果はまだありません</div>';renderAutoPosePlayers();renderShotEvents();document.getElementById('aiFrameCount').textContent='0';document.getElementById('aiTrackCount').textContent='0';document.getElementById('aiDetectedCount').textContent='0'});
 renderSavedShotReports();renderShotEvents();
+
+// --- Dedicated timestamped tactical review tab ---
+let tacticalScenes=[];
+try{tacticalScenes=JSON.parse(localStorage.getItem('u15_tactical_scenes_v1'))||[]}catch(e){tacticalScenes=[]}
+function formatVideoClock(seconds){
+ seconds=Math.max(0,Number(seconds)||0);
+ const m=Math.floor(seconds/60),s=Math.floor(seconds%60);
+ return `${m}:${String(s).padStart(2,'0')}`;
+}
+function openVideoAnalysisTab(){document.querySelector('[data-tab="videoAnalysis"]')?.click()}
+function captureTacticalTime(){
+ const v=document.getElementById('analysisVideo');
+ if(!v||!v.src||!Number.isFinite(v.currentTime)){toast('先に「動画分析」タブで動画を選択してください');return}
+ document.getElementById('tacticalCurrentTime').textContent=formatVideoClock(v.currentTime);
+ document.getElementById('tacticalScene').focus();
+}
+function saveTacticalScene(){
+ const v=document.getElementById('analysisVideo');
+ if(!v||!v.src){toast('先に動画分析タブで動画を選択してください');return}
+ const scene=document.getElementById('tacticalScene').value.trim();
+ const reason=document.getElementById('tacticalReason').value.trim();
+ const action=document.getElementById('tacticalAction').value.trim();
+ if(!scene||!reason||!action){toast('場面・詳細な理由・次のアクションを入力してください');return}
+ const sec=Number(v.currentTime)||0;
+ tacticalScenes.unshift({
+  id:Date.now(),seconds:Number(sec.toFixed(2)),time:formatVideoClock(sec),
+  type:document.getElementById('tacticalType').value,
+  scene,reason,action,createdAt:new Date().toISOString()
+ });
+ tacticalScenes=tacticalScenes.slice(0,100);
+ localStorage.setItem('u15_tactical_scenes_v1',JSON.stringify(tacticalScenes));
+ document.getElementById('tacticalScene').value='';
+ document.getElementById('tacticalReason').value='';
+ document.getElementById('tacticalAction').value='';
+ renderTacticalReview();
+ toast('動画の場面レビューを保存しました');
+}
+function renderTacticalReview(){
+ const list=document.getElementById('tacticalReviewList');
+ const status=document.getElementById('tacticalReviewStatus');
+ const count=document.getElementById('tacticalCount');
+ if(count)count.textContent=tacticalScenes.length;
+ if(!list||!status)return;
+ if(!tacticalScenes.length){status.textContent='まだ場面が登録されていません。';list.innerHTML='<div class="empty">動画を再生し、場面ごとに現在位置を取り込んで評価を保存してください。</div>';return}
+ const shown=tacticalScenes.slice(0,10);
+ status.textContent=`登録 ${tacticalScenes.length}件 ／ レポート表示 ${shown.length}件`;
+ list.innerHTML=shown.map((x,i)=>`<div class="card" style="margin:8px 0"><h3>${i+1}. ${x.time} — ${x.type==='good'?'良いプレー（オフェンス）':'改善が必要（ディフェンス）'}</h3><p><b>場面：</b>${esc(x.scene)}</p><p><b>詳細な理由：</b>${esc(x.reason)}</p><p><b>次のアクション：</b>${esc(x.action)}</p><div class="actions"><button onclick="jumpTacticalTime(${x.seconds})">動画の該当位置へ</button><button class="danger" onclick="deleteTacticalScene(${x.id})">削除</button></div></div>`).join('');
+}
+function jumpTacticalTime(t){
+ const v=document.getElementById('analysisVideo');
+ if(!v||!v.src){toast('動画分析タブで同じ動画を選択してください');return}
+ document.querySelector('[data-tab="videoAnalysis"]')?.click();
+ v.currentTime=Math.max(0,Math.min(v.duration||t,t));v.pause();
+}
+function deleteTacticalScene(id){
+ tacticalScenes=tacticalScenes.filter(x=>x.id!==id);
+ localStorage.setItem('u15_tactical_scenes_v1',JSON.stringify(tacticalScenes));
+ renderTacticalReview();
+}
+function exportTacticalReview(){
+ if(!tacticalScenes.length){toast('保存した場面がありません');return}
+ download('U15_オフェンス_ディフェンス戦術レビュー.json',JSON.stringify({
+  title:'U15 試合動画 戦術レビュー',createdAt:new Date().toISOString(),
+  note:'場面は動画再生位置に基づくコーチ記録。AIが戦術結果を自動確定したものではありません。',
+  items:tacticalScenes.slice(0,10)
+ },null,2),'application/json');
+}
+function exportTacticalCSV(){
+ if(!tacticalScenes.length){toast('保存した場面がありません');return}
+ const rows=[['時間','判定','場面','詳細な理由','次のアクション'],...tacticalScenes.slice(0,10).map(x=>[x.time,x.type==='good'?'良いプレー':'改善が必要',x.scene,x.reason,x.action])];
+ download('U15_戦術レビュー.csv','\ufeff'+rows.map(r=>r.map(csv).join(',')).join('\n'),'text/csv;charset=utf-8');
+}
+window.captureTacticalTime=captureTacticalTime;
+window.saveTacticalScene=saveTacticalScene;
+window.exportTacticalReview=exportTacticalReview;
+window.exportTacticalCSV=exportTacticalCSV;
+window.jumpTacticalTime=jumpTacticalTime;
+window.deleteTacticalScene=deleteTacticalScene;
+window.openVideoAnalysisTab=openVideoAnalysisTab;
+const tacticalVideo=document.getElementById('analysisVideo');
+if(tacticalVideo){
+ tacticalVideo.addEventListener('timeupdate',()=>{const el=document.getElementById('tacticalCurrentTime');if(el)el.textContent=formatVideoClock(tacticalVideo.currentTime)});
+}
+renderTacticalReview();
+
 </script>
 
 </body></html>
