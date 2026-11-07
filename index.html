@@ -64,7 +64,7 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
 </div>
 <div class="qbar no-print" id="quarters"></div>
 <div class="tabs no-print">
- <button class="active" data-tab="own" id="ownTabLabel">自チーム</button><button data-tab="camera" id="cameraTabLabel">カメラ分析</button><button data-tab="videoAnalysis">動画分析</button><button data-tab="players" id="oppPlayersTabLabel">相手選手</button><button data-tab="scout" id="oppScoutTabLabel">相手チーム</button><button data-tab="advice">対策</button><button data-tab="rotation">交代・出場時間</button><button data-tab="games">試合保存</button><button data-tab="report">試合レポート</button><button data-tab="evaluation" id="evaluationTab">評価レポート</button>
+ <button class="active" data-tab="own" id="ownTabLabel">自チーム</button><button data-tab="camera" id="cameraTabLabel">カメラ分析</button><button data-tab="videoAnalysis">動画分析</button><button data-tab="players" id="oppPlayersTabLabel">相手選手</button><button data-tab="scout" id="oppScoutTabLabel">相手チーム</button><button data-tab="advice">対策</button><button data-tab="rotation">交代・出場時間</button><button data-tab="games">試合保存</button><button data-tab="report">試合レポート</button>
 </div>
 <section id="own" class="panel active">
  <div class="card"><h2 id="ownRosterHeading">自チーム選手別スタッツ</h2><p class="hint">選手名を登録し、各項目の＋を直接タップ。シュート成功は試投数と得点も自動加算します。</p><div id="ownRoster" class="roster"></div></div>
@@ -143,6 +143,15 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
   <div class="actions"><button onclick="exportShotReports()">フォームレポートを書き出す（JSON）</button><button class="danger" onclick="clearShotReports()">保存レポートを削除</button></div>
  </div>
 
+
+ <div class="card" id="playReviewCard">
+  <h2>🏀 試合動画AIプレー分析（最大10項目）</h2>
+  <p class="hint">AI骨格検出で見つかったシュート動作について、肩・肘・手首・膝・体幹の数値を確認し、良い動きと改善候補を最大10項目に整理します。分析後に下のボタンを押してください。骨格だけでは得点・パス成功・リバウンド・守備の成否は判定できません。</p>
+  <div class="actions"><button class="primary" onclick="generatePlayReview()">良いプレー・改善点を10項目分析</button><button onclick="exportPlayReview()">分析結果をJSON保存</button></div>
+  <div id="playReviewStatus" class="metric">動画を選択し、AI検出を実行した後に分析してください。</div>
+  <div id="playReviewList"><div class="empty">分析結果はまだありません</div></div>
+ </div>
+
 </section>
 
 <section id="players" class="panel">
@@ -178,15 +187,6 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
 </section>
 <section id="report" class="panel">
  <div class="card"><h2>試合レポート</h2><div id="reportContent"></div><div class="actions no-print"><button class="primary" onclick="window.print()">PDFとして保存・印刷</button><button onclick="exportJSON()">データを書き出す</button><button onclick="exportCSV()">CSVを書き出す</button></div><p class="hint no-print">PDFボタンから印刷画面を開き、保存先で「PDFに保存」を選択してください。</p></div>
-</section>
-<section id="evaluation" class="panel">
- <div class="card">
-  <h2>📊 選手別フォーム評価レポート</h2>
-  <p class="hint">動画分析で保存した自動シュートフォーム評価と、動画上で関節位置を指定して保存した測定記録を集約します。選手別の肩・肘・手首・膝・体幹の測定値、良い点、改善点を確認できます。</p>
-  <div class="metricgrid" id="evaluationSummary"></div>
-  <div class="actions no-print"><button class="primary" onclick="renderEvaluationReport()">最新データに更新</button><button onclick="exportEvaluationReport()">評価レポートJSON保存</button><button onclick="window.print()">PDF保存・印刷</button></div>
-  <div id="evaluationContent"><div class="empty">保存済みフォームレポートがここに表示されます。</div></div>
- </div>
 </section>
 <div class="actions no-print">
  <button onclick="undo()">↶ 直前取消</button><button onclick="saveNow()">保存</button><button class="danger" onclick="resetGame()">試合データをリセット</button>
@@ -436,7 +436,7 @@ function renderQuarterButtons(){let el=document.getElementById('quarters');if(el
  input.addEventListener('change',e=>{state[id==='ownName'?'ownName':'oppName']=e.target.value.trim()||(id==='ownName'?'自チーム':'対戦相手');persist();});
 });
 renderQuarterButtons();
-document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));if(b.dataset.tab==='report')renderReport();if(b.dataset.tab==='evaluation')renderEvaluationReport();if(b.dataset.tab==='camera')renderCameraAnalysis()}));
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));if(b.dataset.tab==='report')renderReport();if(b.dataset.tab==='camera')renderCameraAnalysis()}));
 render();renderRotation();renderGames();updateClock();
 
 ['ownName','oppName'].forEach(id=>{
@@ -477,8 +477,8 @@ if(m.knee!==null){if(m.knee>=145)good.push('リリース付近で膝が伸びる
 if(m.trunk!==null){if(m.trunk<=15)good.push('体幹の左右の傾きは小さく、軸が保たれています。');else improve.push('体幹が左右に傾いています。両足の幅と踏み切り方向を整え、真上に伸びる意識を持ちましょう。')}
 if(!good.length)good.push('骨格の一部が十分に検出できず、良い点は判定保留です。');if(!improve.length)improve.push('今回の骨格指標では大きな修正点は見つかりません。複数方向の映像とシュート結果も確認しましょう。');return{good,improve}}
 function captureShotFrame(video,l,id,side,time){let scale=Math.min(1,960/video.videoWidth),w=Math.max(1,Math.round(video.videoWidth*scale)),h=Math.max(1,Math.round(video.videoHeight*scale));let c=document.createElement('canvas');c.width=w;c.height=h;let x=c.getContext('2d');x.drawImage(video,0,0,w,h);x.strokeStyle='#00e5ff';x.fillStyle='#00e5ff';x.lineWidth=Math.max(2,w*.003);for(let [a,b] of POSE_LINKS){if(l[a]?.visibility>.35&&l[b]?.visibility>.35){x.beginPath();x.moveTo(l[a].x*w,l[a].y*h);x.lineTo(l[b].x*w,l[b].y*h);x.stroke()}}for(let i of [11,12,13,14,15,16,23,24,25,26,27,28])if(l[i]?.visibility>.35){x.beginPath();x.arc(l[i].x*w,l[i].y*h,Math.max(3,w*.006),0,Math.PI*2);x.fill()}x.font=`bold ${Math.max(14,w*.025)}px sans-serif`;x.fillText(`ID ${id} / 推定リリース直前 ${time.toFixed(2)}s / ${side}`,12,28);return c.toDataURL('image/jpeg',.72)}
-function detectShotEvents(items,v){for(let item of items){let l=item.landmarks,id=item.id,selected=document.getElementById('shotPlayer')?.value||'all';if(selected!=='all'&&String(id)!==selected)continue;let hand=document.getElementById('shotHand')?.value||'auto';let sides=hand==='auto'?['right','left']:[hand];for(let side of sides){let wrist=l[side==='right'?16:15],elbow=poseAngle(l[side==='right'?12:11],l[side==='right'?14:13],wrist);if(!wrist||wrist.visibility<.45||elbow===null)continue;let key=id+'-'+side,h=shotHistories.get(key)||[];let sample={time:v.currentTime,y:wrist.y,elbow,landmarks:l,side};if(!h.length||wrist.y<Math.min(...h.slice(-6).map(z=>z.y))-.002)sample.image=captureShotFrame(v,l,id,side,v.currentTime);h.push(sample);if(h.length>16)h.shift();shotHistories.set(key,h);if(h.length<7)continue;let recent=h.slice(-7),peak=recent.reduce((a,b)=>b.y<a.y?b:a,recent[0]),first=recent[0],last=recent[recent.length-1];let rise=first.y-peak.y,fall=last.y-peak.y,already=shotLastDetected.get(key)||-10;if(peak===recent[recent.length-1]||peak.elbow<135||rise<.035||fall<.018||v.currentTime-already<1.1)continue;let metrics=shotMetrics(peak.landmarks,side),comments=formComments(metrics),image=peak.image||captureShotFrame(v,peak.landmarks,id,side,peak.time);let ev={id,side,time:peak.time,metrics,comments,image,created:new Date().toISOString(),confirmed:false};shotEvents.unshift(ev);if(shotEvents.length>40)shotEvents.pop();shotLastDetected.set(key,v.currentTime);renderShotEvents();let st=document.getElementById('shotDetectStatus');if(st)st.textContent=`シュート動作を検出：ID ${id}／${side==='right'?'右手':'左手'}／${peak.time.toFixed(2)}秒（映像で確認してください）`;}}}
-function renderShotEvents(){let el=document.getElementById('shotEvents');if(!el)return;if(!shotEvents.length){el.innerHTML='<div class="empty">シュート動作はまだ検出されていません</div>';return}el.innerHTML=shotEvents.map((e,i)=>`<div class="card" style="margin:8px 0"><b>ID ${e.id}・${e.side==='right'?'右手':'左手'}・${e.time.toFixed(2)}秒</b><p class="hint">推定リリース直前の骨格画像（動画上の推定時刻）</p><img src="${e.image}" alt="推定リリース骨格" style="width:100%;max-width:520px;border-radius:8px"><p>肩 ${e.metrics.shoulder??'—'}°／肘 ${e.metrics.elbow??'—'}°／手首 ${e.metrics.wrist??'—'}°／膝 ${e.metrics.knee??'—'}°／体幹傾き ${e.metrics.trunk??'—'}°</p><b>良いところ</b><ul>${e.comments.good.map(x=>`<li>${x}</li>`).join('')}</ul><b>改善点</b><ul>${e.comments.improve.map(x=>`<li>${x}</li>`).join('')}</ul><button onclick="saveShotReport(${i})">この選手のレポートを保存</button><button onclick="seekShot(${e.time})">動画の該当位置へ</button></div>`).join('')}
+function detectShotEvents(items,v){for(let item of items){let l=item.landmarks,id=item.id,selected=document.getElementById('shotPlayer')?.value||'all';if(selected!=='all'&&String(id)!==selected)continue;let hand=document.getElementById('shotHand')?.value||'auto';let sides=hand==='auto'?['right','left']:[hand];for(let side of sides){let wrist=l[side==='right'?16:15],elbow=poseAngle(l[side==='right'?12:11],l[side==='right'?14:13],wrist);if(!wrist||wrist.visibility<.45||elbow===null)continue;let key=id+'-'+side,h=shotHistories.get(key)||[];let sample={time:v.currentTime,y:wrist.y,elbow,landmarks:l,side};if(!h.length||wrist.y<Math.min(...h.slice(-6).map(z=>z.y))-.002)sample.image=captureShotFrame(v,l,id,side,v.currentTime);h.push(sample);if(h.length>16)h.shift();shotHistories.set(key,h);if(h.length<7)continue;let recent=h.slice(-7),peak=recent.reduce((a,b)=>b.y<a.y?b:a,recent[0]),first=recent[0],last=recent[recent.length-1];let rise=first.y-peak.y,fall=last.y-peak.y,already=shotLastDetected.get(key)||-10;if(peak===recent[recent.length-1]||peak.elbow<135||rise<.035||fall<.018||v.currentTime-already<1.1)continue;let metrics=shotMetrics(peak.landmarks,side),comments=formComments(metrics),image=peak.image||captureShotFrame(v,peak.landmarks,id,side,peak.time);let ev={id,side,time:peak.time,metrics,comments,image,rise:Number(rise.toFixed(3)),fall:Number(fall.toFixed(3)),peakElbow:peak.elbow,created:new Date().toISOString(),confirmed:false};shotEvents.unshift(ev);if(shotEvents.length>40)shotEvents.pop();shotLastDetected.set(key,v.currentTime);renderShotEvents();let st=document.getElementById('shotDetectStatus');if(st)st.textContent=`シュート動作を検出：ID ${id}／${side==='right'?'右手':'左手'}／${peak.time.toFixed(2)}秒（映像で確認してください）`;}}}
+function renderShotEvents(){let el=document.getElementById('shotEvents');if(!el)return;if(!shotEvents.length){el.innerHTML='<div class="empty">シュート動作はまだ検出されていません</div>';return}el.innerHTML=shotEvents.map((e,i)=>`<div class="card" style="margin:8px 0"><b>ID ${e.id}・${e.side==='right'?'右手':'左手'}・${e.time.toFixed(2)}秒</b><p class="hint">推定リリース直前の骨格画像（動画上の推定時刻）</p><p class="hint">手首の上昇量：${e.rise??"—"}（画面比）／頂点後の下降量：${e.fall??"—"}（画面比）／頂点時の肘：${e.peakElbow??"—"}°</p><img src="${e.image}" alt="推定リリース骨格" style="width:100%;max-width:520px;border-radius:8px"><p>肩 ${e.metrics.shoulder??'—'}°／肘 ${e.metrics.elbow??'—'}°／手首 ${e.metrics.wrist??'—'}°／膝 ${e.metrics.knee??'—'}°／体幹傾き ${e.metrics.trunk??'—'}°</p><b>良いところ</b><ul>${e.comments.good.map(x=>`<li>${x}</li>`).join('')}</ul><b>改善点</b><ul>${e.comments.improve.map(x=>`<li>${x}</li>`).join('')}</ul><button onclick="saveShotReport(${i})">この選手のレポートを保存</button><button onclick="seekShot(${e.time})">動画の該当位置へ</button></div>`).join('')}
 function seekShot(t){let v=document.getElementById('analysisVideo');v.currentTime=t;v.pause()}
 function saveShotReport(i){let e=shotEvents[i];if(!e)return;let name=document.getElementById('shotPlayerName')?.value.trim()||`選手ID ${e.id}`;let report={...e,playerName:name,team:document.getElementById('ownName')?.value||'自チーム',savedAt:new Date().toISOString()};savedShotReports.unshift(report);localStorage.setItem('u15_shot_form_reports_v1',JSON.stringify(savedShotReports));renderSavedShotReports();toast('選手別フォームレポートを保存しました')}
 function renderSavedShotReports(){let el=document.getElementById('shotReports');if(!el)return;if(!savedShotReports.length){el.innerHTML='<div class="empty">保存したレポートはありません</div>';return}el.innerHTML=savedShotReports.map((r,i)=>`<div class="card" style="margin:6px 0"><b>${r.playerName}</b>／ID ${r.id}／${Number(r.time).toFixed(2)}秒 <span class="hint">${new Date(r.savedAt).toLocaleString()}</span><p>${r.comments.good.join(' ')}</p><p>${r.comments.improve.join(' ')}</p><button onclick="downloadShotReport(${i})">このレポートを保存</button></div>`).join('')}
@@ -487,36 +487,60 @@ function exportShotReports(){download('U15_player_shot_form_reports.json',JSON.s
 function clearShotReports(){if(!confirm('保存したフォームレポートをすべて削除しますか？'))return;savedShotReports=[];localStorage.removeItem('u15_shot_form_reports_v1');renderSavedShotReports()}
 window.saveShotReport=saveShotReport;window.seekShot=seekShot;window.downloadShotReport=downloadShotReport;window.exportShotReports=exportShotReports;window.clearShotReports=clearShotReports;
 
+
+let latestPlayReview=[];
+function generatePlayReview(){
+ const checks=[
+  {key:'shoulder',name:'肩の使い方',good:v=>v>=70&&v<=150,goodTitle:'肩から腕への振り上げが安定',goodText:'肩から腕への振り上げ角度が観察目安の範囲です。',badTitle:'肩の振り上げを確認',badText:'肩だけで無理に上げず、脚・体幹から腕へ連動しているか映像で確認しましょう。'},
+  {key:'elbow',name:'肘の伸展',good:v=>v>=150,goodTitle:'肘が伸びたリリース姿勢',goodText:'推定リリース付近で肘の伸展が確認できます。',badTitle:'肘の伸展を改善候補に',badText:'推定リリース付近で肘の伸びが不足している可能性があります。自然に前上方へ伸ばす動きを確認しましょう。'},
+  {key:'wrist',name:'手首・指先',good:v=>v>=140,goodTitle:'手首・指先のフォロースルー',goodText:'手首から指先への伸びが観察されています。',badTitle:'手首・指先の抜けを確認',badText:'手首・指先のフォロースルーを映像で確認し、自然に最後まで使えるか練習しましょう。'},
+  {key:'knee',name:'膝の伸展',good:v=>v>=145,goodTitle:'下半身の伸びが見られる',goodText:'推定リリース付近で膝が伸びる動きが確認できます。',badTitle:'膝と腕の連動を確認',badText:'膝の伸展が十分でない可能性があります。膝でためてから腕へ力をつなげる動きを確認しましょう。'},
+  {key:'trunk',name:'体幹の軸',good:v=>v<=15,goodTitle:'体幹の軸が安定',goodText:'左右方向の体幹傾きが小さく、軸が保たれています。',badTitle:'体幹の傾きを改善候補に',badText:'左右方向の体幹傾きが大きめです。踏み切り方向と着地位置を映像で確認しましょう。'}
+ ];
+ let findings=[];
+ for(const e of shotEvents.slice().sort((a,b)=>a.time-b.time)){
+  for(const c of checks){
+   const value=e.metrics?.[c.key];
+   if(value===null||value===undefined||!Number.isFinite(Number(value)))continue;
+   const good=c.good(Number(value));
+   findings.push({
+    kind:good?'good':'improve',
+    title:good?c.goodTitle:c.badTitle,
+    category:c.name,
+    playerId:e.id,
+    time:Number(e.time.toFixed(2)),
+    value:Number(value),
+    unit:'°',
+    detail:(good?c.goodText:c.badText),
+    evidence:`ID ${e.id}・${e.time.toFixed(2)}秒・${c.name} ${value}°`
+   });
+  }
+ }
+ latestPlayReview=findings.slice(0,10);
+ const status=document.getElementById('playReviewStatus');
+ const list=document.getElementById('playReviewList');
+ if(!findings.length){
+  status.textContent='分析できるシュート動作がありません。動画を選び、AI検出を準備してから動画を再生してください。';
+  list.innerHTML='<div class="empty">骨格が十分に検出されたシュート動作がまだありません。</div>';
+  return;
+ }
+ const goodCount=latestPlayReview.filter(x=>x.kind==='good').length;
+ const improveCount=latestPlayReview.filter(x=>x.kind==='improve').length;
+ status.textContent=`検出データから${latestPlayReview.length}項目を抽出（良い動き ${goodCount}件／改善候補 ${improveCount}件）。${findings.length<10?'10項目に満たないため、検出できた分のみ表示しています。':'最大10項目を表示しています。'}`;
+ list.innerHTML=latestPlayReview.map((x,i)=>`<div class="rec ${x.kind==='improve'?'high':''}"><h3>${i+1}. ${x.kind==='good'?'良い動き':'改善候補'}：${x.title}</h3><p><b>${x.evidence}</b><br>${x.detail}</p></div>`).join('');
+}
+function exportPlayReview(){
+ if(!latestPlayReview.length){toast('先にプレー分析を実行してください');return}
+ download('U15_試合動画AIプレー分析10項目.json',JSON.stringify({createdAt:new Date().toISOString(),method:'骨格検出されたシュート動作の関節角度に基づく観察候補。得点・パス・リバウンド・守備の成否は判定しない。',items:latestPlayReview},null,2),'application/json');
+}
+window.generatePlayReview=generatePlayReview;
+window.exportPlayReview=exportPlayReview;
+
 function autoPoseLoop(){if(!autoPoseRunning)return;let v=document.getElementById('analysisVideo');if(!v||v.paused||v.ended||v.readyState<2){if(v?.ended)stopAutoPose();else requestAnimationFrame(autoPoseLoop);return}if(v.currentTime!==autoPoseLastTime){autoPoseLastTime=v.currentTime;try{let result=autoPoseLandmarker.detectForVideo(v,Math.max(0,Math.round(v.currentTime*1000)));let poses=result.landmarks||[];let items=matchPoseTracks(poses);drawAutoPose(items);detectShotEvents(items,v);autoPoseFrames++;document.getElementById('aiDetectedCount').textContent=poses.length;document.getElementById('aiFrameCount').textContent=autoPoseFrames;document.getElementById('aiTrackCount').textContent=autoPoseTracks.size;if(autoPoseFrames%8===0){renderAutoPosePlayers();let sel=document.getElementById('shotPlayer');if(sel){let val=sel.value;sel.innerHTML='<option value="all">全選手を検出</option>'+[...autoPoseTracks.keys()].sort((a,b)=>a-b).map(id=>`<option value="${id}">ID ${id}</option>`).join('');sel.value=val}}}catch(e){console.warn(e);document.getElementById('aiStatus').textContent='フレーム解析エラー: '+e.message}}requestAnimationFrame(autoPoseLoop)}
 function exportAutoPoseCSV(){let rows=[['選手ID','検出回数','左肘平均角度','右肘平均角度','左膝平均角度','右膝平均角度'],...[...autoPoseTracks.values()].sort((a,b)=>a.id-b.id).map(t=>[t.id,t.count,...['leftElbow','rightElbow','leftKnee','rightKnee'].map(k=>t.samples[k]?Math.round(t.sums[k]/t.samples[k]):'')])];download('U15_AI_pose_analysis.csv','\ufeff'+rows.map(r=>r.map(csv).join(',')).join('\n'),'text/csv;charset=utf-8')}
 function clearAutoPoseLog(){if(!confirm('AI分析の集計記録を消去しますか？'))return;autoPoseTracks.clear();autoPoseNextId=1;autoPoseFrames=0;document.getElementById('aiFrameCount').textContent='0';document.getElementById('aiTrackCount').textContent='0';document.getElementById('aiDetectedCount').textContent='0';renderAutoPosePlayers()}
 window.initAutoPose=initAutoPose;window.startAutoPose=startAutoPose;window.stopAutoPose=stopAutoPose;window.exportAutoPoseCSV=exportAutoPoseCSV;window.clearAutoPoseLog=clearAutoPoseLog;
-const aiFile=document.getElementById('analysisVideoFile');if(aiFile)aiFile.addEventListener('change',()=>{stopAutoPose();autoPoseLastTime=-1;autoPoseTracks.clear();autoPoseNextId=1;autoPoseFrames=0;shotHistories.clear();shotEvents=[];shotLastDetected.clear();renderAutoPosePlayers();renderShotEvents();document.getElementById('aiFrameCount').textContent='0';document.getElementById('aiTrackCount').textContent='0';document.getElementById('aiDetectedCount').textContent='0'});
-function renderEvaluationReport(){
- const shots=Array.isArray(savedShotReports)?savedShotReports:[];
- const manual=Array.isArray(videoMeasurements)?videoMeasurements:[];
- const summary=document.getElementById('evaluationSummary'),content=document.getElementById('evaluationContent');
- if(!summary||!content)return;
- const all=shots.map(r=>({kind:'shot',data:r})).concat(manual.map(r=>({kind:'manual',data:r})))
-   .sort((a,b)=>new Date(b.data.savedAt||b.data.date||0)-new Date(a.data.savedAt||a.data.date||0));
- const avg=values=>{const a=values.map(v=>v===null||v===undefined||v===''?NaN:Number(v)).filter(v=>Number.isFinite(v));return a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):null};
- const angleValues=k=>[
-   ...shots.map(r=>r.metrics?.[k]),
-   ...(k==='elbow'?manual.map(r=>r.elbow):k==='knee'?manual.map(r=>r.knee):[])
- ];
- const metrics=[['肩',avg(angleValues('shoulder'))],['肘',avg(angleValues('elbow'))],['手首',avg(angleValues('wrist'))],['膝',avg(angleValues('knee'))],['体幹傾き',avg(angleValues('trunk'))]];
- const playerNames=[...shots.map(r=>r.playerName||('選手ID '+r.id)),...manual.map(r=>r.player)];
- summary.innerHTML=`<div class="metric"><span>評価記録合計</span><b>${all.length}</b></div><div class="metric"><span>自動シュート評価</span><b>${shots.length}</b></div><div class="metric"><span>動画角度測定</span><b>${manual.length}</b></div><div class="metric"><span>評価選手数</span><b>${new Set(playerNames.filter(Boolean)).size}</b></div><div class="metric"><span>最新評価</span><b style="font-size:14px">${all.length?new Date(all[0].data.savedAt||all[0].data.date||Date.now()).toLocaleDateString():'—'}</b></div>`+metrics.map(([n,v])=>`<div class="metric"><span>${n} 平均</span><b>${v===null?'—':v+'°'}</b></div>`).join('');
- if(!all.length){content.innerHTML='<div class="empty">動画分析の記録はまだありません。動画分析タブで自動シュート評価を保存するか、関節位置を指定して測定記録を保存してください。</div>';return}
- content.innerHTML=all.map(({kind,data:r},i)=>{
-   if(kind==='manual')return `<article class="card" style="margin:10px 0"><h3>${esc(r.player||'選手名未設定')} <span class="hint">／ 動画角度測定</span></h3><p class="hint">記録日時：${esc(r.date||'')}　動画時刻：${Number(r.time||0).toFixed(2)}秒</p><div class="metricgrid"><div class="metric"><span>肘</span><b>${r.elbow!==null&&r.elbow!==undefined&&Number.isFinite(Number(r.elbow))?Math.round(Number(r.elbow))+'°':'—'}</b></div><div class="metric"><span>膝</span><b>${r.knee!==null&&r.knee!==undefined&&Number.isFinite(Number(r.knee))?Math.round(Number(r.knee))+'°':'—'}</b></div></div><p class="hint">動画分析タブで保存した関節角度測定です。</p></article>`;
-   const m=r.metrics||{},good=r.comments?.good||[],bad=r.comments?.improve||[];
-   return `<article class="card" style="margin:10px 0"><h3>${esc(r.playerName||('選手ID '+r.id))} <span class="hint">／ 自動シュート評価 ／ ${esc(r.team||'')} ／ ${Number(r.time||0).toFixed(2)}秒</span></h3><p class="hint">評価日時：${esc(new Date(r.savedAt||r.created||Date.now()).toLocaleString())}　${r.side==='left'?'左手':'右手'}</p><div class="metricgrid">${[['肩',m.shoulder],['肘',m.elbow],['手首',m.wrist],['膝',m.knee],['体幹傾き',m.trunk]].map(([n,v])=>`<div class="metric"><span>${n}</span><b>${v!==null&&v!==undefined&&Number.isFinite(Number(v))?Math.round(Number(v))+'°':'—'}</b></div>`).join('')}</div><div class="metricgrid"><div class="metric"><b>良い点</b><ul>${good.map(x=>`<li>${esc(x)}</li>`).join('')||'<li>評価データなし</li>'}</ul></div><div class="metric"><b>改善点</b><ul>${bad.map(x=>`<li>${esc(x)}</li>`).join('')||'<li>評価データなし</li>'}</ul></div></div>${r.image?`<details><summary>リリース直前の骨格画像を表示</summary><img src="${r.image}" alt="骨格評価画像" style="width:100%;max-width:480px;border-radius:8px;margin-top:8px"></details>`:''}<button class="no-print" onclick="downloadEvaluationItem(${shots.indexOf(r)})">この評価を保存</button></article>`;
- }).join('');
-}
-function exportEvaluationReport(){download('U15_選手別フォーム評価レポート.json',JSON.stringify({automaticShotReports:savedShotReports||[],videoAngleMeasurements:videoMeasurements||[]},null,2),'application/json')}
-function downloadEvaluationItem(i){const r=(savedShotReports||[])[i];if(r)download(`U15_評価_${String(r.playerName||('ID'+r.id)).replace(/[^\wぁ-んァ-ヶ一-龠-]/g,'_')}.json`,JSON.stringify(r,null,2),'application/json')}
-window.renderEvaluationReport=renderEvaluationReport;window.exportEvaluationReport=exportEvaluationReport;window.downloadEvaluationItem=downloadEvaluationItem;
+const aiFile=document.getElementById('analysisVideoFile');if(aiFile)aiFile.addEventListener('change',()=>{stopAutoPose();autoPoseLastTime=-1;autoPoseTracks.clear();autoPoseNextId=1;autoPoseFrames=0;shotHistories.clear();shotEvents=[];shotLastDetected.clear();latestPlayReview=[];document.getElementById('playReviewStatus').textContent='新しい動画を選択しました。AI検出後に分析してください。';document.getElementById('playReviewList').innerHTML='<div class="empty">分析結果はまだありません</div>';renderAutoPosePlayers();renderShotEvents();document.getElementById('aiFrameCount').textContent='0';document.getElementById('aiTrackCount').textContent='0';document.getElementById('aiDetectedCount').textContent='0'});
 renderSavedShotReports();renderShotEvents();
 </script>
 
