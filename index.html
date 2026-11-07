@@ -41,7 +41,7 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
 .metric{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line);border-radius:9px;padding:8px;background:white}
 .metric button{padding:8px 13px;font-weight:700}.metric b{min-width:24px;text-align:center}
 .recs{display:grid;gap:8px}.rec{border:1px solid var(--line);border-left:5px solid var(--orange);border-radius:9px;background:white;padding:11px}
-.rec.high{border-left-color:var(--red)}.rec h3{margin-bottom:5px}.rec p{margin:0;font-size:13px;line-height:1.55}
+.rec.high{border-left-color:var(--red)}.rec h3{margin-bottom:5px}.rec p{margin:0;font-size:13px;line-height:1.55}.plan{background:#f3f7fc;border-radius:8px;padding:9px 12px;margin-top:8px;font-size:13px;line-height:1.6}.plan b{display:block;margin-bottom:3px}
 .badge{font-size:11px;background:#fff0df;color:#8a4300;border-radius:20px;padding:3px 8px}
 .tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:13px;background:white}td,th{border-bottom:1px solid var(--line);padding:8px;text-align:center;white-space:nowrap}th{background:#f4f7fb}
 .actions{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}.actions button{flex:1}
@@ -64,7 +64,7 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
 </div>
 <div class="qbar no-print" id="quarters"></div>
 <div class="tabs no-print">
- <button class="active" data-tab="own" id="ownTabLabel">自チーム</button><button data-tab="camera">カメラ分析</button><button data-tab="videoAnalysis">動画分析</button><button data-tab="players" id="oppPlayersTabLabel">相手選手</button><button data-tab="scout" id="oppScoutTabLabel">相手チーム</button><button data-tab="advice">対策</button><button data-tab="rotation">交代・出場時間</button><button data-tab="games">試合保存</button><button data-tab="report">試合レポート</button>
+ <button class="active" data-tab="own" id="ownTabLabel">自チーム</button><button data-tab="camera">カメラ分析</button><button data-tab="videoAnalysis">動画分析</button><button data-tab="evaluationReport">評価レポート</button><button data-tab="players" id="oppPlayersTabLabel">相手選手</button><button data-tab="scout" id="oppScoutTabLabel">相手チーム</button><button data-tab="advice">対策</button><button data-tab="rotation">交代・出場時間</button><button data-tab="games">試合保存</button><button data-tab="report">試合レポート</button>
 </div>
 <section id="own" class="panel active">
  <div class="card"><h2 id="ownRosterHeading">自チーム選手別スタッツ</h2><p class="hint">選手名を登録し、各項目の＋を直接タップ。シュート成功は試投数と得点も自動加算します。</p><div id="ownRoster" class="roster"></div></div>
@@ -130,6 +130,15 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
  </div>
 </section>
 
+<section id="evaluationReport" class="panel">
+ <div class="card">
+  <h2>📋 AIフォーム評価レポート</h2>
+  <p class="hint">動画内で検出した骨格データをもとに、改善ポイントをコメント形式で表示します。角度の数値を評価の主役にはしません。端末内の姿勢推定＋評価ルールによる自動コメントで、自由文生成AIではありません。</p>
+  <div class="actions"><button class="primary" onclick="generateFormEvaluationReport()">評価コメントを更新</button><button onclick="printFormEvaluationReport()">レポートを印刷・PDF保存</button><button onclick="exportFormEvaluationReport()">コメントをテキスト保存</button></div>
+  <div id="formEvaluationContent"><div class="empty">動画を選択してAI検出を実行すると、ここに選手別コメントが表示されます。</div></div>
+  <p class="hint">注意：動画全体で検出できた姿勢の傾向から作る参考コメントです。リリース直前だけを切り出した評価ではありません。選手の重なり、画角、遮蔽、検出不足がある場合は判定を保留します。IDは簡易追跡のため、途中で入れ替わる可能性があります。</p>
+ </div>
+</section>
 <section id="players" class="panel">
  <div class="card"><h2 id="oppRosterHeading">相手選手スカウティング</h2><p class="hint">相手選手ごとに特徴を直接記録します。3P成功は試投数も加算します。</p><div id="oppRoster" class="roster"></div></div>
  <div class="card"><h2 id="oppTotalsHeading">相手選手の傾向</h2><div id="oppTotals"></div></div>
@@ -356,14 +365,42 @@ function poseCenter(l){let ids=[11,12,23,24],pts=ids.map(i=>l[i]).filter(p=>p&&p
 function poseMeasurements(l){return{leftElbow:poseAngle(l[11],l[13],l[15]),rightElbow:poseAngle(l[12],l[14],l[16]),leftKnee:poseAngle(l[23],l[25],l[27]),rightKnee:poseAngle(l[24],l[26],l[28])}}
 function matchPoseTracks(poses){let candidates=[];for(let i=0;i<poses.length;i++){let c=poseCenter(poses[i]);let best=null,dist=.20;for(let [id,t] of autoPoseTracks){if(t.used)continue;let d=Math.hypot(c.x-t.cx,c.y-t.cy);if(d<dist){dist=d;best=id}}if(best===null)best=autoPoseNextId++;let t=autoPoseTracks.get(best)||{id:best,count:0,sums:{},samples:{},cx:c.x,cy:c.y};t.used=true;t.cx=c.x;t.cy=c.y;t.count++;let m=poseMeasurements(poses[i]);for(let k in m)if(m[k]!==null&&m[k]>0){t.sums[k]=(t.sums[k]||0)+m[k];t.samples[k]=(t.samples[k]||0)+1}autoPoseTracks.set(best,t);candidates.push({id:best,landmarks:poses[i],center:c,measurements:m})}for(let t of autoPoseTracks.values())t.used=false;return candidates}
 function drawAutoPose(items){let v=document.getElementById('analysisVideo'),c=document.getElementById('analysisOverlay');if(!v||!c)return;let rect=v.getBoundingClientRect(),wrap=document.getElementById('analysisVideoWrap').getBoundingClientRect();c.width=Math.max(1,Math.round(rect.width*devicePixelRatio));c.height=Math.max(1,Math.round(rect.height*devicePixelRatio));c.style.left=(rect.left-wrap.left)+'px';c.style.top=(rect.top-wrap.top)+'px';c.style.width=rect.width+'px';c.style.height=rect.height+'px';let x=c.getContext('2d');x.setTransform(c.width,0,0,c.height,0,0);x.clearRect(0,0,1,1);let palette=['#00e5ff','#ffcc00','#ff5c8a','#70ef8b','#b18cff','#ff914d','#6dd5ed','#f7a8ff','#d6ff63','#ffffff'];for(let item of items){let col=palette[(item.id-1)%palette.length],l=item.landmarks;x.strokeStyle=col;x.fillStyle=col;x.lineWidth=.004;for(let [a,b] of POSE_LINKS){if(l[a]?.visibility>.35&&l[b]?.visibility>.35){x.beginPath();x.moveTo(l[a].x,l[a].y);x.lineTo(l[b].x,l[b].y);x.stroke()}}for(let idx of [11,12,13,14,15,16,23,24,25,26,27,28])if(l[idx]?.visibility>.35){x.beginPath();x.arc(l[idx].x,l[idx].y,.006,0,Math.PI*2);x.fill()}x.font='bold 0.025px sans-serif';x.lineWidth=.002;x.strokeStyle='#111';x.strokeText('ID '+item.id,item.center.x,item.center.y-.035);x.fillText('ID '+item.id,item.center.x,item.center.y-.035)}}
+
+function formCommentForTrack(t){
+ const avg=k=>t.samples[k]?t.sums[k]/t.samples[k]:null;
+ const elbows=[avg('leftElbow'),avg('rightElbow')].filter(v=>v!==null);
+ const knees=[avg('leftKnee'),avg('rightKnee')].filter(v=>v!==null);
+ const improve=[],good=[],plans=[];
+ if(t.count<12)return{good:['全身の骨格を一部検出できました'],improve:['検出回数が少ないためフォーム評価は保留です。選手の全身とボールが画面内に入るように撮影し、動画を再生して再分析してください。'],plans:['横方向から固定撮影し、頭から足先まで画面に入れる','選手が他の選手と重ならない場面を選び、10秒以上分析する']};
+ if(!elbows.length){improve.push('肘の位置を十分に検出できず、腕の評価は判定不能です。');plans.push('カメラを横〜斜め前に置き、ボールを持つ腕が体や他選手に隠れない映像で再確認する');}
+ else{const e=elbows.reduce((a,b)=>a+b,0)/elbows.length;if(e<135){improve.push('肘が十分に伸びきらない姿勢が多い傾向です。リリース後に腕が自然に伸びているか確認しましょう。');plans.push('近距離のワンハンドフォームシュートを左右各10本。肘から手首へリング方向に伸ばし、毎回フィニッシュを2秒保持する');}else if(e>178){improve.push('肘が伸び切った姿勢で検出される傾向です。肩や手首に力みがないかコマ送りで確認しましょう。');plans.push('力まずに打てる距離からフォームシュートを10本。リリース後に肩がすくまず、手首が柔らかく返るかコーチが確認する');}else{improve.push('腕の伸展は大きく崩れていない傾向です。肘から手首までの向きが毎回そろうか確認しましょう。');good.push('肘・腕の骨格点を継続して検出できています');plans.push('同じ位置から5本ずつ撮影し、肘の向きとフォロースルーが再現できるか比較する');}}
+ if(!knees.length){improve.push('膝の位置を十分に検出できず、下半身の評価は判定不能です。');plans.push('足元まで映る画角にして、他選手に膝が隠れない映像で再分析する');}
+ else{const k=knees.reduce((a,b)=>a+b,0)/knees.length;if(k>165){improve.push('膝の曲げが小さい姿勢が多い可能性があります。キャッチからリリースまで下半身を使えているか確認しましょう。');plans.push('近距離でキャッチ＆シュートを10本。キャッチ前に準備姿勢を作り、膝と股関節を使って床を押す感覚を確認する');}else if(k<105){improve.push('膝を深く曲げた姿勢が多く検出されています。毎回同じ深さから打てているか確認しましょう。');plans.push('無理に深く沈まず、同じ準備姿勢から連続5本を2セット。バランスを崩さず同じ高さでリリースできるか確認する');}else{improve.push('膝の曲げ伸ばしは一定範囲で検出されています。ジャンプと腕の動きが連動するか確認しましょう。');good.push('下半身の骨格点を継続して検出できています');plans.push('近距離のキャッチ＆シュートを10本。膝の伸び始めとボールのリリースが滑らかにつながるか確認する');}}
+ return{good:good.length?good:['姿勢データを取得しました'],improve,plans};
+}
+function generateFormEvaluationReport(){
+ const el=document.getElementById('formEvaluationContent');if(!el)return;
+ const rows=[...autoPoseTracks.values()].sort((a,b)=>a.id-b.id);
+ if(!rows.length){el.innerHTML='<div class="empty">先に動画を選択し、AI検出を実行してください。</div>';return}
+ el.innerHTML=rows.map(t=>{const r=formCommentForTrack(t);return '<div class="card"><h3>選手 ID '+t.id+'</h3><p class="hint">検出フレーム：'+t.count+'回</p><h4>良かった点</h4><ul>'+r.good.map(x=>'<li>'+x+'</li>').join('')+'</ul><h4>改善ポイント</h4><ul>'+r.improve.map(x=>'<li>'+x+'</li>').join('')+'</ul><div class="plan"><b>次回の改善プラン</b><ol>'+r.plans.map(x=>'<li>'+x+'</li>').join('')+'</ol></div><p class="hint">※動画全体の姿勢傾向に基づく参考コメントです。リリース瞬間や成功率を直接判定した結果ではありません。</p></div>'}).join('');
+}
+function formEvaluationText(){return [...autoPoseTracks.values()].sort((a,b)=>a.id-b.id).map(t=>{const r=formCommentForTrack(t);return '選手 ID '+t.id+'（検出 '+t.count+'回）\n良かった点\n・'+r.good.join('\n・')+'\n改善ポイント\n・'+r.improve.join('\n・')+'\n次回の改善プラン\n・'+r.plans.join('\n・')}).join('\n\n')}
+function exportFormEvaluationReport(){const s=formEvaluationText();if(!s){toast('先にAI動画分析を実行してください');return}download('U15_AIフォーム評価レポート.txt',s,'text/plain;charset=utf-8')}
+function printFormEvaluationReport(){
+ generateFormEvaluationReport();if(!autoPoseTracks.size){toast('評価できるAI検出データがありません');return}
+ const w=window.open('','_blank');if(!w){toast('ポップアップを許可してください');return}
+ w.document.write('<html lang="ja"><meta charset="utf-8"><title>U15 AIフォーム評価レポート</title><style>body{font-family:sans-serif;padding:24px;line-height:1.7}.card{border:1px solid #bbb;border-radius:8px;padding:14px;margin:14px 0}.hint{color:#555;font-size:12px}</style><h2>U15 AIフォーム評価レポート</h2><p>作成日：'+new Date().toLocaleString('ja-JP')+'</p>'+document.getElementById('formEvaluationContent').innerHTML+'<p class="hint">姿勢推定＋評価ルールによる参考コメントです。リリース直前の動作や成功率を直接判定したものではありません。</p><script>window.onload=function(){window.print()}<\\/script></html>');
+ w.document.close();
+}
+
 function renderAutoPosePlayers(){let el=document.getElementById('autoPosePlayers');if(!el)return;let rows=[...autoPoseTracks.values()].sort((a,b)=>a.id-b.id);if(!rows.length){el.innerHTML='<div class="empty">まだ検出データがありません</div>';return}let avg=(t,k)=>t.samples[k]?Math.round(t.sums[k]/t.samples[k])+'°':'—';el.innerHTML='<table><tr><th>選手ID</th><th>検出回数</th><th>左肘平均</th><th>右肘平均</th><th>左膝平均</th><th>右膝平均</th></tr>'+rows.map(t=>`<tr><td><b>ID ${t.id}</b></td><td>${t.count}</td><td>${avg(t,'leftElbow')}</td><td>${avg(t,'rightElbow')}</td><td>${avg(t,'leftKnee')}</td><td>${avg(t,'rightKnee')}</td></tr>`).join('')+'</table>'}
 async function initAutoPose(){let status=document.getElementById('aiStatus'),btn=document.getElementById('aiInitBtn');try{btn.disabled=true;status.textContent='AIライブラリを読み込んでいます…（通信環境により数十秒かかります）';let mod=await import(AUTO_POSE_BUNDLE);status.textContent='骨格モデルを読み込んでいます…';let vision=await mod.FilesetResolver.forVisionTasks(AUTO_POSE_WASM);autoPoseLandmarker=await mod.PoseLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:AUTO_POSE_MODEL,delegate:'CPU'},runningMode:'VIDEO',numPoses:Number(document.getElementById('aiMaxPeople').value),minPoseDetectionConfidence:.45,minPosePresenceConfidence:.45,minTrackingConfidence:.45});status.textContent='AI準備完了。動画の自動分析を開始できます。';document.getElementById('aiStartBtn').disabled=false;toast('複数人AI検出の準備ができました')}catch(e){console.error(e);status.textContent='AI準備に失敗しました。インターネット接続を確認して再試行してください。詳細: '+(e.message||e);btn.disabled=false;toast('AIモデルを読み込めませんでした')}}
 function startAutoPose(){let v=document.getElementById('analysisVideo');if(!autoPoseLandmarker){toast('先にAI検出を準備してください');return}if(!v||!v.src||!v.videoWidth){toast('先に分析する動画を選択してください');return}autoPoseRunning=true;document.getElementById('aiStartBtn').disabled=true;document.getElementById('aiStopBtn').disabled=false;document.getElementById('aiStatus').textContent='動画を再生すると、複数選手の骨格を自動検出します。';if(v.paused)v.play().catch(()=>{});requestAnimationFrame(autoPoseLoop)}
-function stopAutoPose(){autoPoseRunning=false;document.getElementById('aiStartBtn').disabled=!autoPoseLandmarker;document.getElementById('aiStopBtn').disabled=true;document.getElementById('aiStatus').textContent='AI分析を停止しました。集計結果は保持されています。';renderAutoPosePlayers()}
-function autoPoseLoop(){if(!autoPoseRunning)return;let v=document.getElementById('analysisVideo');if(!v||v.paused||v.ended||v.readyState<2){if(v?.ended)stopAutoPose();else requestAnimationFrame(autoPoseLoop);return}if(v.currentTime!==autoPoseLastTime){autoPoseLastTime=v.currentTime;try{let result=autoPoseLandmarker.detectForVideo(v,Math.max(0,Math.round(v.currentTime*1000)));let poses=result.landmarks||[];let items=matchPoseTracks(poses);drawAutoPose(items);autoPoseFrames++;document.getElementById('aiDetectedCount').textContent=poses.length;document.getElementById('aiFrameCount').textContent=autoPoseFrames;document.getElementById('aiTrackCount').textContent=autoPoseTracks.size;if(autoPoseFrames%8===0)renderAutoPosePlayers()}catch(e){console.warn(e);document.getElementById('aiStatus').textContent='フレーム解析エラー: '+e.message}}requestAnimationFrame(autoPoseLoop)}
+function stopAutoPose(){autoPoseRunning=false;document.getElementById('aiStartBtn').disabled=!autoPoseLandmarker;document.getElementById('aiStopBtn').disabled=true;document.getElementById('aiStatus').textContent='AI分析を停止しました。良かった点・改善ポイント・改善プランを更新しました。';renderAutoPosePlayers();generateFormEvaluationReport()}
+function autoPoseLoop(){if(!autoPoseRunning)return;let v=document.getElementById('analysisVideo');if(!v||v.paused||v.ended||v.readyState<2){if(v?.ended)stopAutoPose();else requestAnimationFrame(autoPoseLoop);return}if(v.currentTime!==autoPoseLastTime){autoPoseLastTime=v.currentTime;try{let result=autoPoseLandmarker.detectForVideo(v,Math.max(0,Math.round(v.currentTime*1000)));let poses=result.landmarks||[];let items=matchPoseTracks(poses);drawAutoPose(items);autoPoseFrames++;document.getElementById('aiDetectedCount').textContent=poses.length;document.getElementById('aiFrameCount').textContent=autoPoseFrames;document.getElementById('aiTrackCount').textContent=autoPoseTracks.size;if(autoPoseFrames%8===0)renderAutoPosePlayers();if(autoPoseFrames%30===0)generateFormEvaluationReport()}catch(e){console.warn(e);document.getElementById('aiStatus').textContent='フレーム解析エラー: '+e.message}}requestAnimationFrame(autoPoseLoop)}
 function exportAutoPoseCSV(){let rows=[['選手ID','検出回数','左肘平均角度','右肘平均角度','左膝平均角度','右膝平均角度'],...[...autoPoseTracks.values()].sort((a,b)=>a.id-b.id).map(t=>[t.id,t.count,...['leftElbow','rightElbow','leftKnee','rightKnee'].map(k=>t.samples[k]?Math.round(t.sums[k]/t.samples[k]):'')])];download('U15_AI_pose_analysis.csv','\ufeff'+rows.map(r=>r.map(csv).join(',')).join('\n'),'text/csv;charset=utf-8')}
 function clearAutoPoseLog(){if(!confirm('AI分析の集計記録を消去しますか？'))return;autoPoseTracks.clear();autoPoseNextId=1;autoPoseFrames=0;document.getElementById('aiFrameCount').textContent='0';document.getElementById('aiTrackCount').textContent='0';document.getElementById('aiDetectedCount').textContent='0';renderAutoPosePlayers()}
-window.initAutoPose=initAutoPose;window.startAutoPose=startAutoPose;window.stopAutoPose=stopAutoPose;window.exportAutoPoseCSV=exportAutoPoseCSV;window.clearAutoPoseLog=clearAutoPoseLog;
+window.initAutoPose=initAutoPose;window.startAutoPose=startAutoPose;window.stopAutoPose=stopAutoPose;window.exportAutoPoseCSV=exportAutoPoseCSV;window.clearAutoPoseLog=clearAutoPoseLog;window.generateFormEvaluationReport=generateFormEvaluationReport;window.printFormEvaluationReport=printFormEvaluationReport;window.exportFormEvaluationReport=exportFormEvaluationReport;
 const aiFile=document.getElementById('analysisVideoFile');if(aiFile)aiFile.addEventListener('change',()=>{stopAutoPose();autoPoseLastTime=-1;autoPoseTracks.clear();autoPoseNextId=1;autoPoseFrames=0;renderAutoPosePlayers();document.getElementById('aiFrameCount').textContent='0';document.getElementById('aiTrackCount').textContent='0';document.getElementById('aiDetectedCount').textContent='0'});
 </script>
 
