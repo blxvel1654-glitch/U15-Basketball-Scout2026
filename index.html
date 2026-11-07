@@ -158,7 +158,7 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
 <section id="tacticalReview" class="panel">
  <div class="card">
   <h2>🎥 試合動画・オフェンス／ディフェンス戦術レビュー</h2>
-  <p class="hint">動画分析タブで読み込んだ動画の再生位置を取り込み、場面ごとに評価を保存します。タイムスタンプは動画の再生時間から自動取得します。画面内の選手の位置関係やボールの動きをコーチが確認し、事実に基づいて記録してください。現在の骨格AIだけではスクリーン、パス成功、ヘルプ判断、得点結果を確実に識別できないため、それらを自動判定したとは表示しません。</p>
+  <p class="hint">動画分析タブで読み込んだ動画の再生位置を取り込み、場面ごとに評価を保存します。タイムスタンプは動画の再生時間から自動取得します。このタブは骨格・関節角度を評価せず、状況判断・ポジショニングの意図・チーム約束事の遂行を評価します。映像を見ながら状況を選ぶと、バスケットボールの原則に基づく戦術分析支援が理由と次のアクションを作成します。映像認識だけでプレーの意図やチームルールを確定できないため、選択内容はコーチが確認してください。</p>
   <div class="metricgrid">
    <div class="metric"><span>動画の現在位置</span><b id="tacticalCurrentTime">0:00</b></div>
    <div class="metric"><span>登録した場面</span><b id="tacticalCount">0</b></div>
@@ -172,6 +172,31 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
    <option value="good">良いプレー（オフェンスの成功要因）</option>
    <option value="improve">改善が必要（ディフェンスの課題）</option>
   </select>
+  <h3>状況判断の評価（骨格フォーム・関節角度は評価対象外）</h3>
+  <label>攻撃側の意図</label>
+  <select id="tacticalOffenseIntent">
+   <option value="drive">ドライブでペイントへ侵入</option><option value="pass">パスでズレを作る・展開</option><option value="screen">スクリーンを使って有利を作る</option><option value="shoot">シュート機会を作る</option><option value="cut">カット・バックドアで裏を取る</option><option value="transition">速攻・トランジション</option><option value="other">その他／不明</option>
+  </select>
+  <label>ディフェンスの対応</label>
+  <select id="tacticalDefenseRead">
+   <option value="ahead">コース・パスを予測して先回り</option><option value="late">後手に回り追いかけている</option><option value="contain">進行方向を限定して止めている</option><option value="help">ヘルプに出て味方をカバー</option><option value="rotate">ローテーションで次の相手をカバー</option><option value="unknown">判断できない</option>
+  </select>
+  <label>プレッシャー・間合いの意図</label>
+  <select id="tacticalPressure">
+   <option value="close">密着してシュート／ボールを封じる</option><option value="gap">距離を取りドライブを警戒</option><option value="deny">パスコースを消す・ディナイ</option><option value="sag">ヘルプ優先であえて離れる</option><option value="unclear">意図が読み取れない</option>
+  </select>
+  <label>スクリーンへの対応（該当する場合）</label>
+  <select id="tacticalScreen">
+   <option value="none">スクリーンなし</option><option value="fight">ファイトオーバー</option><option value="under">アンダー</option><option value="switch">スイッチ</option><option value="show">ショウ／ヘッジ</option><option value="slip">スリップ等への対応</option><option value="unknown">約束事・対応が不明</option>
+  </select>
+  <label>チームの約束事に沿っていたか</label>
+  <select id="tacticalRule">
+   <option value="yes">約束事どおり遂行</option><option value="no">約束事と異なる／連携ミス</option><option value="na">約束事が不明・該当なし</option>
+  </select>
+  <label>プレーの結果</label>
+  <select id="tacticalOutcome">
+   <option value="advantage">攻撃側が数的・位置的優位を獲得</option><option value="stop">守備側が侵入・パス・シュートを抑えた</option><option value="score">得点につながった</option><option value="turnover">ターンオーバーになった</option><option value="reset">優位を作れず攻撃をやり直した</option><option value="unknown">結果不明</option>
+  </select>
   <label>場面・プレー内容</label>
   <input id="tacticalScene" placeholder="例：右ウイングからドライブ、ヘルプが遅れた">
   <label>詳細な理由（何が起きたか／なぜ良い・悪いか）</label>
@@ -183,10 +208,10 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
  <div class="card">
   <h2>分析観点チェック</h2>
   <div class="metricgrid">
-   <div class="metric"><b>ディフェンス</b><p>スタンス幅・重心・クロスステップ・スクリーン対応・プレッシャー・間合い・ドライブへのコース取り・手の使い方・ヘルプ・ローテーション</p></div>
+   <div class="metric"><b>ディフェンス</b><p>予測して先回りできたか・ドライブ／パスコースの制限・間合いの意図・スクリーンの約束事（ファイトオーバー／アンダー／スイッチ／ショウ）・ヘルプ判断・ローテーション</p></div>
    <div class="metric"><b>オフェンス</b><p>スペーシング・ドライブ／パス判断・スクリーン活用・パスの精度とタイミング・シュートまでの連携</p></div>
   </div>
-  <p class="hint">最大10場面をレポートに表示します。場面が10件未満の場合は登録分のみ表示します。</p>
+  <p class="hint">最大10場面をレポートに表示します。場面が10件未満の場合は登録分のみ表示します。</p><p class="hint">参考原則：JBAの指導で重視される状況判断、スペーシング、ボールと人の動き、ヘルプ＆ローテーション、スクリーン対応、チームの約束事という一般的な戦術概念を反映。JBAの全教材・全プレーを取り込んだものではありません。</p>
  </div>
  <div class="card">
   <h2>保存した場面レビュー（最大10件）</h2>
@@ -599,18 +624,55 @@ function captureTacticalTime(){
  document.getElementById('tacticalCurrentTime').textContent=formatVideoClock(v.currentTime);
  document.getElementById('tacticalScene').focus();
 }
+
+function buildTacticalIQ(){
+ const val=id=>document.getElementById(id)?.value||'';
+ const offense=val('tacticalOffenseIntent'), defense=val('tacticalDefenseRead'), pressure=val('tacticalPressure'), screen=val('tacticalScreen'), rule=val('tacticalRule'), outcome=val('tacticalOutcome');
+ const offenseNames={drive:'ドライブ',pass:'パス展開',screen:'スクリーン活用',shoot:'シュート機会づくり',cut:'カット／バックドア',transition:'速攻',other:'攻撃の意図'};
+ let reasons=[],actions=[],verdict='状況確認';
+ if(defense==='ahead'){reasons.push('守備側は攻撃の選択肢を予測し、ボールが動く前に先回りできている。相手の得意な展開を限定できた点が評価できる。');actions.push('予測の根拠（相手の利き手、配置、直前のパターン）をチームで共有し、次のパス先まで連動する。');}
+ if(defense==='late'){reasons.push('守備側は攻撃の動きが始まってから追いかけており、先手を取られている。ボールだけを見て周囲の配置や次の選択肢を読む準備が遅れた可能性がある。');actions.push('ボール保持者だけでなく、味方・ヘルプ位置・次のパス先を同時に確認し、動き出す前に進行方向を限定する。');}
+ if(defense==='contain'){reasons.push('守備側は正面から奪いに行くより、進行方向を限定してペイント侵入を抑える判断をしている。');actions.push('中央を簡単に割らせず、サイドへ誘導した後のヘルプ位置とリバウンド担当まで確認する。');}
+ if(defense==='help'){reasons.push('ヘルプに出る判断が選択されている。成功の鍵は、ボールマンへの寄せと自分のマークマンを誰が引き継ぐかの予告・共有にある。');actions.push('ヘルプに出る選手は声で知らせ、隣の選手がローテーションしてパス先を埋める。ヘルプ後の戻り先も明確にする。');}
+ if(defense==='rotate'){reasons.push('ローテーションで次の攻撃者を埋める局面。全員がボールの移動と次のパス先を予測できたかが成否を分ける。');actions.push('ボールが空中にある間に次の相手へ移動し、最も危険なシュート機会を優先して消す。');}
+ if(pressure==='close'){reasons.push('密着する意図はシュートやキャッチを制限すること。ただし抜かれた場合のヘルプ位置が準備できているかが重要。');actions.push('相手のシュート力・ドライブ力に応じて距離を調整し、抜かれた瞬間のカバー担当を明確にする。');}
+ if(pressure==='gap'){reasons.push('距離を取る意図はドライブへの備えと考えられる。相手のシュート力が高い場合は、空けた距離から打たれるリスクとの比較が必要。');actions.push('相手の得意なプレーに合わせて間合いを決め、シュートを許容する距離とドライブを止める位置をチームで統一する。');}
+ if(pressure==='deny'){reasons.push('ディナイでパスコースを消す判断。ボールとマークマンの両方を視野に入れ、バックドアへの対応を準備できているかが重要。');actions.push('パスを消すだけでなく、背後を取られた場合のヘルプ位置を確認し、ボール側・ヘルプ側の役割を共有する。');}
+ if(pressure==='sag'){reasons.push('ヘルプを優先して距離を取る判断。ペイントを守る狙いと、相手に空いたシュートを打たせるリスクの釣り合いを確認する。');actions.push('誰を一時的に空けてよいかを相手のシュート力で決め、パスが出た瞬間にクローズアウトする。');}
+ if(screen==='fight'){reasons.push('ファイトオーバーはシューターやボールハンドラーへの圧力を維持する選択。スクリーンに接触して遅れた場合、ビッグマンのカバーと連携できたかが焦点。');actions.push('スクリーン前に声を出し、上を通る選手とカバー役の距離・角度を合わせる。');}
+ if(screen==='under'){reasons.push('アンダーは相手のシュート力やスクリーン位置を踏まえ、ドライブを優先して警戒する選択。相手にリズムよく打たせていないか確認する。');actions.push('相手の成功率・得意レンジに応じてアンダーの可否を決め、スクリーン後すぐにボールへ戻る。');}
+ if(screen==='switch'){reasons.push('スイッチはミスマッチを受け入れてでもボールへの圧力やドライブ阻止を優先する選択。受け渡しの声と次のカバーが成否を決める。');actions.push('スクリーン接触前に声で交換を宣言し、スイッチ後のミスマッチとリバウンド担当を全員で共有する。');}
+ if(screen==='show'){reasons.push('ショウ／ヘッジはボールを一時的に止めて味方が戻る時間を作る選択。出る深さと戻るタイミング、背後のロール対応が重要。');actions.push('ボールを止める時間を必要最小限にし、ロールマンを誰が受けるかを事前に決めておく。');}
+ if(rule==='yes'){reasons.push('チームの約束事どおりに遂行できたという評価。結果だけでなく、声・受け渡し・次のカバーまで連続して実行できたかを確認する。');}
+ if(rule==='no'){reasons.push('チームの約束事と異なる対応、または受け渡しのずれがあった。個人の反応だけでなく、事前の共有不足や役割の曖昧さが原因の可能性がある。');actions.push('守り方のコールを短い共通語で統一し、誰がボール・スクリーン・ロールマンを担当するかを練習で反復する。');}
+ if(outcome==='advantage'){reasons.push('攻撃側が数的・位置的優位を得ているため、守備の予測またはローテーションに遅れがあった可能性がある。');actions.push('ボールがペイントへ入る前にヘルプ位置を取り、パスが出た瞬間に次のローテーションを開始する。');}
+ if(outcome==='stop'){reasons.push('守備側が攻撃の選択肢を制限できた結果。どの予測・間合い・カバーが有効だったかを再現可能な形で共有する。');actions.push('成功した守り方を相手の配置別に整理し、同じ状況で全員が同じ判断を選べるようにする。');}
+ if(outcome==='score'){reasons.push('得点につながった結果だけでなく、得点前にどこで優位が生まれたか、守備側がどのタイミングで後手になったかを特定する必要がある。');actions.push('最初に崩れた地点を確認し、ヘルプ開始・ローテーション・クローズアウトのどこを修正するか決める。');}
+ if(outcome==='turnover'){reasons.push('ターンオーバーにつながった場面。守備側の予測・パスコース制限・プレッシャーのどれがボール保持者の判断を難しくしたかを確認する。');actions.push('成功したプレッシャーのきっかけを共有し、次も同じ誘導方向へ追い込めるようにする。');}
+ if(outcome==='reset'){reasons.push('攻撃側が優位を作れずやり直している。守備側が最初のアクションを遅らせ、次の選択肢を限定できた可能性がある。');actions.push('守備側は不用意に飛び込まず、時間とスペースを奪う守りを継続する。攻撃側は次のアクションへ素早く移る。');}
+ if(!reasons.length)reasons.push('選択された情報だけでは状況判断の質を十分に判定できない。ボール・オフボール・ヘルプ位置とプレー結果を追加確認する。');
+ if(!actions.length)actions.push('動画を前後数秒戻して、ボール保持者・マークマン・ヘルプ担当・次のパス先を確認し、チームの約束事と照合する。');
+ if(rule==='no'||defense==='late'||outcome==='advantage')verdict='改善が必要な判断・連携';
+ else if((defense==='ahead'||defense==='contain'||defense==='help'||defense==='rotate')&&(outcome==='stop'||outcome==='turnover'||rule==='yes'))verdict='良い守備判断・遂行';
+ else if(outcome==='score'&&offense!=='other')verdict='良い攻撃結果（成功要因を確認）';
+ else verdict='追加確認が必要';
+ return {offense:offenseNames[offense]||'不明',defense,pressure,screen,rule,outcome,verdict,reason:reasons.join(' '),action:[...new Set(actions)].join(' '),basis:'状況選択に基づく戦術ルール支援。映像全体の自動認識やJBA全プレーの網羅判定ではありません。'};
+}
 function saveTacticalScene(){
  const v=document.getElementById('analysisVideo');
  if(!v||!v.src){toast('先に動画分析タブで動画を選択してください');return}
  const scene=document.getElementById('tacticalScene').value.trim();
  const reason=document.getElementById('tacticalReason').value.trim();
  const action=document.getElementById('tacticalAction').value.trim();
- if(!scene||!reason||!action){toast('場面・詳細な理由・次のアクションを入力してください');return}
+ if(!scene){toast('場面・プレー内容を入力してください');return}
  const sec=Number(v.currentTime)||0;
+ const iq=buildTacticalIQ();
+ const finalReason=reason||iq.reason;
+ const finalAction=action||iq.action;
  tacticalScenes.unshift({
   id:Date.now(),seconds:Number(sec.toFixed(2)),time:formatVideoClock(sec),
   type:document.getElementById('tacticalType').value,
-  scene,reason,action,createdAt:new Date().toISOString()
+  scene,reason:finalReason,action:finalAction,iq,createdAt:new Date().toISOString()
  });
  tacticalScenes=tacticalScenes.slice(0,100);
  localStorage.setItem('u15_tactical_scenes_v1',JSON.stringify(tacticalScenes));
@@ -629,7 +691,7 @@ function renderTacticalReview(){
  if(!tacticalScenes.length){status.textContent='まだ場面が登録されていません。';list.innerHTML='<div class="empty">動画を再生し、場面ごとに現在位置を取り込んで評価を保存してください。</div>';return}
  const shown=tacticalScenes.slice(0,10);
  status.textContent=`登録 ${tacticalScenes.length}件 ／ レポート表示 ${shown.length}件`;
- list.innerHTML=shown.map((x,i)=>`<div class="card" style="margin:8px 0"><h3>${i+1}. ${x.time} — ${x.type==='good'?'良いプレー（オフェンス）':'改善が必要（ディフェンス）'}</h3><p><b>場面：</b>${esc(x.scene)}</p><p><b>詳細な理由：</b>${esc(x.reason)}</p><p><b>次のアクション：</b>${esc(x.action)}</p><div class="actions"><button onclick="jumpTacticalTime(${x.seconds})">動画の該当位置へ</button><button class="danger" onclick="deleteTacticalScene(${x.id})">削除</button></div></div>`).join('');
+ list.innerHTML=shown.map((x,i)=>`<div class="card" style="margin:8px 0"><h3>${i+1}. ${x.time} — ${x.type==='good'?'良いプレー（オフェンス）':'改善が必要（ディフェンス）'}</h3><p><b>場面：</b>${esc(x.scene)}</p><p><b>詳細な理由：</b>${esc(x.reason)}</p><p><b>戦術判定：</b>${esc(x.iq?.verdict||"コーチ評価")}</p><p><b>状況判断の理由：</b>${esc(x.iq?.reason||x.reason)}</p><p><b>次のアクション：</b>${esc(x.iq?.action||x.action)}</p><div class="actions"><button onclick="jumpTacticalTime(${x.seconds})">動画の該当位置へ</button><button class="danger" onclick="deleteTacticalScene(${x.id})">削除</button></div></div>`).join('');
 }
 function jumpTacticalTime(t){
  const v=document.getElementById('analysisVideo');
@@ -646,7 +708,7 @@ function exportTacticalReview(){
  if(!tacticalScenes.length){toast('保存した場面がありません');return}
  download('U15_オフェンス_ディフェンス戦術レビュー.json',JSON.stringify({
   title:'U15 試合動画 戦術レビュー',createdAt:new Date().toISOString(),
-  note:'場面は動画再生位置に基づくコーチ記録。AIが戦術結果を自動確定したものではありません。',
+  note:'骨格角度・フォームは評価対象外。状況選択に基づく戦術ルール支援であり、映像全体の自動認識やJBA全プレーの網羅判定ではありません。',
   items:tacticalScenes.slice(0,10)
  },null,2),'application/json');
 }
