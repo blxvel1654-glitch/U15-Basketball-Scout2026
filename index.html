@@ -49,10 +49,6 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
 @media(min-width:850px){main{padding:18px}.roster{grid-template-columns:repeat(3,minmax(0,1fr))}.metricgrid{grid-template-columns:repeat(3,minmax(0,1fr))}.score strong{font-size:38px}}
 @media(max-width:430px){.roster{grid-template-columns:1fr}.stats{grid-template-columns:repeat(4,minmax(0,1fr))}.tabs button{font-size:12px;padding:9px 7px}}
 @media print{header,.names,.qbar,.tabs,.actions,.hint,.no-print{display:none!important}body{background:white}main{max-width:none;padding:0}.panel{display:none!important}#report{display:block!important}.card{break-inside:avoid;border:0}.printtable{font-size:10px} }
-
-.promise-card{border:1px solid #d9e1ea;border-radius:12px;padding:12px;margin:10px 0;background:#fff}.promise-card .actions{margin-top:8px}
-
-.report-hero{background:#14243a;color:#fff;border-radius:14px;padding:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:10px 0}.report-hero h2{font-size:20px;margin:5px 0}.report-hero h2 small{font-size:12px;color:#cbd5e1}.report-kicker{font-size:10px;letter-spacing:2px;color:#cbd5e1}.report-result{display:inline-block;background:#e8f1ff;color:#174b83;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:800}.report-score{white-space:nowrap}.report-score strong{font-size:38px}.report-score span{color:#cbd5e1}.report-diff{font-weight:700}.report-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0}.report-stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px}.report-stat small{display:block;color:var(--muted);font-size:11px}.report-stat b{font-size:23px}.report-section{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px;margin:10px 0}.report-section h3{font-size:15px;margin-bottom:10px}.qlegend{display:flex;gap:14px;font-size:11px;color:var(--muted);margin-bottom:8px}.qrow{display:grid;grid-template-columns:30px 1fr 26px 1fr 26px;gap:6px;align-items:center;margin:8px 0;font-size:12px}.qtrack,.shoot-track{height:9px;background:#edf1f6;border-radius:20px;overflow:hidden}.qtrack span{display:block;height:100%;background:#2463a6;border-radius:20px}.qtrack.opp span{background:#b45b10}.shoot-row{margin:12px 0}.shoot-row>div:first-child{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px}.shoot-row strong{font-size:14px}.shoot-track span{display:block;height:100%;background:#147d54;border-radius:20px}.comment-columns{display:grid;grid-template-columns:1fr 1fr;gap:10px}.comment-columns>div{background:#f7f9fc;border-radius:10px;padding:10px}.comment-columns h4{margin:0 0 7px;font-size:13px}.comment-columns ul{margin:0;padding-left:18px;font-size:13px;line-height:1.6}.report-leaders{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.report-leaders h3{font-size:13px}.report-section .rec{margin:8px 0}.report-section .rec p{margin-top:5px}@media(max-width:560px){.report-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.comment-columns,.report-leaders{grid-template-columns:1fr}.report-score strong{font-size:30px}.qrow{grid-template-columns:26px 1fr 22px 1fr 22px;gap:4px}}
 </style>
 <link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"></head>
 <body>
@@ -68,17 +64,28 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
 </div>
 <div class="qbar no-print" id="quarters"></div>
 <div class="tabs no-print">
- <button class="active" data-tab="own" id="ownTabLabel">自チーム</button><button data-tab="camera">カメラ分析</button><button data-tab="videoAnalysis">動画分析・分析レポート</button><button data-tab="players" id="oppPlayersTabLabel">相手選手</button><button data-tab="scout" id="oppScoutTabLabel">相手チーム</button><button data-tab="advice">対策</button><button data-tab="rotation">交代・出場時間</button><button data-tab="games">試合保存</button>
+ <button class="active" data-tab="own" id="ownTabLabel">自チーム</button><button data-tab="stats" id="statsTabLabel">スタッツ</button><button data-tab="camera" id="cameraTabLabel">カメラ分析</button><button data-tab="videoAnalysis">動画分析</button><button data-tab="tacticalReview">試合戦術分析</button><button data-tab="players" id="oppPlayersTabLabel">相手選手</button><button data-tab="scout" id="oppScoutTabLabel">相手チーム</button><button data-tab="advice">対策</button><button data-tab="rotation">交代・出場時間</button><button data-tab="games">試合保存</button><button data-tab="report">試合レポート</button>
 </div>
 <section id="own" class="panel active">
  <div class="card"><h2 id="ownRosterHeading">自チーム選手別スタッツ</h2><p class="hint">選手名を登録し、各項目の＋を直接タップ。シュート成功は試投数と得点も自動加算します。</p><div id="ownRoster" class="roster"></div></div>
  <div class="card"><h2 id="ownTotalsHeading">チーム集計</h2><div id="ownTotals"></div></div>
+
+</section>
+<section id="stats" class="panel">
+ <div class="card">
+  <h2>📊 チーム・選手スタッツ</h2>
+  <p class="hint">自チームの記録データから自動集計します。成功数・失敗数は「自チーム」タブで記録してください。</p>
+  <div id="statsTeamSummary" class="metricgrid"></div>
+ </div>
+ <div class="card"><h2>🏆 得点ランキング TOP 3</h2><div id="statsTopPoints" class="metricgrid"></div></div>
+ <div class="card"><h2>💪 リバウンドランキング TOP 3</h2><div id="statsTopRebounds" class="metricgrid"></div></div>
+ <div class="card"><h2>選手別スタッツ一覧</h2><div id="statsPlayerTable" class="tablewrap"></div></div>
 </section>
 <section id="camera" class="panel">
  <div class="card">
-  <h2>📷 カメラ・シュート分析</h2>
+  <h2 id="cameraShotHeading">📷 カメラ・シュート分析</h2>
   <p class="hint">スマホカメラでフォームを撮影し、映像を見ながら選手・位置・成功／失敗を記録します。現バージョンはボールの軌道や成功判定をAIが自動認識する機能ではありません。</p>
-  <div class="actions"><button class="primary" id="cameraStart" onclick="startCamera()">カメラを起動</button><button onclick="stopCamera()">カメラ停止</button><button onclick="captureFrame()">静止画を保存</button></div>
+  <div class="actions"><button class="primary" id="cameraStart" onclick="startCamera()">カメラを起動</button><button onclick="switchCamera()">前後カメラ切替</button><button onclick="stopCamera()">カメラ停止</button><button onclick="captureFrame()">静止画を保存</button></div>
   <video id="cameraVideo" autoplay playsinline muted style="display:block;width:100%;max-height:58vh;background:#111;border-radius:10px;object-fit:contain"></video>
   <canvas id="cameraCanvas" style="display:none"></canvas>
   <p id="cameraStatus" class="hint">カメラ未起動。撮影時はスマホを固定し、全身とボールが映る位置に設置してください。</p>
@@ -91,7 +98,7 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
   <div class="actions"><button class="primary" onclick="recordShot(true)">○ 成功</button><button class="danger" onclick="recordShot(false)">× 失敗</button></div>
   <div id="shotSummary"></div>
  </div>
- <div class="card"><h2>撮影メモ・フォーム確認</h2><p class="hint">映像を見て、次の項目を記録します。角度やリリースの数値を自動計測するものではありません。</p>
+ <div class="card"><h2 id="cameraFormHeading">撮影メモ・フォーム確認</h2><p class="hint">映像を見て、次の項目を記録します。角度やリリースの数値を自動計測するものではありません。</p>
   <div class="metricgrid">
    <label class="metric"><span>肘の向き</span><select id="formElbow"><option>良好</option><option>内側に入る</option><option>外側に開く</option><option>未確認</option></select></label>
    <label class="metric"><span>リリース</span><select id="formRelease"><option>一定</option><option>低い</option><option>遅い</option><option>未確認</option></select></label>
@@ -106,7 +113,7 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
 
 <section id="videoAnalysis" class="panel">
  <div class="card">
-  <h2>🎞️ 動画分析・試合レポート</h2>
+  <h2>🎞️ 動画アップロード・複数選手フォーム分析</h2>
   <p class="hint">動画はこの端末のブラウザ内で再生・AI解析します。動画ファイル自体はサーバーへ送信しません。AIプログラムと骨格モデルの読み込みにはインターネット接続が必要です（毎回の起動時に読み込みます）。動画ファイル自体は端末内で処理されます。</p>
   <label>分析する動画（端末内のファイル）</label><input id="analysisVideoFile" type="file" accept="video/*">
   <div id="analysisVideoName" class="hint">動画が選択されていません</div>
@@ -115,18 +122,7 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
    <video id="analysisVideo" controls playsinline preload="metadata" style="display:block;width:100%;max-height:58vh;object-fit:contain"></video>
    <canvas id="analysisOverlay" style="position:absolute;inset:0;width:100%;height:100%;touch-action:manipulation"></canvas>
   </div>
-  <div class="card" style="margin-top:12px"><h3>動画を見ながら得点を記録</h3><p class="hint">再生を一時停止して得点が入った場面でタップしてください。動画時刻・Q・得点を記録し、分析レポートへ反映します。</p><div class="metricgrid"><div class="metric"><b id="videoOwnScoreNow">0</b><span id="videoOwnNameNow">自チーム</span><div class="actions"><button onclick="addVideoScore('own',1)">＋1</button><button onclick="addVideoScore('own',2)">＋2</button><button onclick="addVideoScore('own',3)">＋3</button></div></div><div class="metric"><b id="videoOppScoreNow">0</b><span id="videoOppNameNow">対戦相手</span><div class="actions"><button onclick="addVideoScore('opp',1)">＋1</button><button onclick="addVideoScore('opp',2)">＋2</button><button onclick="addVideoScore('opp',3)">＋3</button></div></div></div><div id="videoScoreEventList" class="tablewrap"></div></div>
   <p class="hint" id="analysisVideoStatus">動画を選択してください。動画は端末内で扱い、ファイルを外部送信しません。</p>
- </div>
- <div class="card" id="geminiVideoCard">
-  <h2>🤖 Gemini動画AI分析（無料モデル固定）</h2>
-  <p class="hint">選択中の試合動画をGoogle Geminiへ送信し、映像を確認させます。チームの約束事の達成・未達成、良かった場面、改善点、スコアボードの得点を分析します。使用モデルは無料枠対象の gemini-2.5-flash-lite に固定し、有料モデルへの自動切替は行いません。無料枠の上限に達した場合は停止します。</p>
-  <label>Gemini APIキー（この画面でのみ使用。端末やGitHubには保存しません）</label>
-  <input id="geminiApiKey" type="password" autocomplete="off" placeholder="Google AI Studioで取得したAPIキー">
-  <p class="hint">APIキー取得：<a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>。課金を完全に避けるには、Google側で請求先を有効化せず無料枠プロジェクトのまま利用してください。アプリは有料モデルへ切り替えませんが、Google側の請求設定そのものは変更・制御できません。無料枠では送信データがGoogleのサービス改善に利用される場合があります。選手動画は必要な同意を得て使用してください。</p>
-  <div class="actions"><button class="primary" id="geminiAnalyzeBtn" onclick="runGeminiVideoAnalysis()">動画をGeminiで分析</button><button onclick="clearGeminiResult()">AI分析結果を消去</button></div>
-  <div id="geminiProgress" class="hint">動画を選択し、APIキーを入力して分析を開始してください。</div>
-  <div id="geminiResultView"><div class="empty">Geminiによる動画分析結果はここに表示されます。</div></div>
  </div>
  <div class="card">
   <h2>🤖 AI複数選手・骨格自動検出</h2>
@@ -143,18 +139,94 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
   <div id="autoPosePlayers" class="tablewrap"><div class="empty">AI検出を開始すると選手別データが表示されます</div></div>
   <div class="actions"><button onclick="exportAutoPoseCSV()">AI分析結果をCSV保存</button><button class="danger" onclick="clearAutoPoseLog()">AI分析記録を消去</button></div>
  </div>
+ <div class="card" id="shotAutoCard">
+  <h2>🏀 シュート動作・リリース推定と基準フォーム比較</h2>
+  <p class="hint">手首の上昇、肘の伸展、手首の頂点後の下降を組み合わせ、リリース直前に近いフレームを推定します。ボールが手から離れた瞬間そのものを骨格だけで確定することはできないため、検出後に映像で確認してください。判定コメントはJBAの基本的な指導原則とプロ映像でよく見られる動作を参考にした観察目安です。数値はJBA公式の角度基準ではなく、選手の体格・距離・フォームの個人差も考慮してください。</p>
+  <div class="metricgrid">
+   <div><label>シュートする手</label><select id="shotHand"><option value="auto">自動（左右を比較）</option><option value="right">右手</option><option value="left">左手</option></select></div>
+   <div><label>評価する選手ID</label><select id="shotPlayer"><option value="all">全選手を検出</option></select></div>
+   <div><label>選手名（レポート用）</label><input id="shotPlayerName" placeholder="例：#7 山田"></div>
+  </div>
+  <div id="shotDetectStatus" class="metric">AI分析を開始するとシュート動作を監視します。</div>
+  <div id="shotEvents" class="tablewrap"><div class="empty">シュート動作はまだ検出されていません</div></div>
+  <h3>保存した選手別フォームレポート</h3>
+  <div id="shotReports" class="tablewrap"><div class="empty">保存したレポートはありません</div></div>
+  <div class="actions"><button onclick="exportShotReports()">フォームレポートを書き出す（JSON）</button><button class="danger" onclick="clearShotReports()">保存レポートを削除</button></div>
+ </div>
+
+
+ <div class="card" id="playReviewCard">
+  <h2>🏀 試合動画AIプレー分析（最大10項目）</h2>
+  <p class="hint">AI骨格検出で見つかったシュート動作について、肩・肘・手首・膝・体幹の数値を確認し、良い動きと改善候補を最大10項目に整理します。分析後に下のボタンを押してください。骨格だけでは得点・パス成功・リバウンド・守備の成否は判定できません。</p>
+  <div class="actions"><button class="primary" onclick="generatePlayReview()">良いプレー・改善点を10項目分析</button><button onclick="exportPlayReview()">分析結果をJSON保存</button></div>
+  <div id="playReviewStatus" class="metric">動画を選択し、AI検出を実行した後に分析してください。</div>
+  <div id="playReviewList"><div class="empty">分析結果はまだありません</div></div>
+ </div>
+
 </section>
 
-<section id="evaluationReport" class="panel">
+
+<section id="tacticalReview" class="panel">
  <div class="card">
-  <h2>📋 AIフォーム評価レポート</h2>
-  <p class="hint">動画内で検出した骨格データをもとに、改善ポイントをコメント形式で表示します。角度の数値を評価の主役にはしません。端末内の姿勢推定＋評価ルールによる自動コメントで、自由文生成AIではありません。</p>
-  <div class="actions"><button class="primary" onclick="generateFormEvaluationReport()">評価コメントを更新</button><button onclick="printFormEvaluationReport()">レポートを印刷・PDF保存</button><button onclick="exportFormEvaluationReport()">コメントをテキスト保存</button></div>
-  <div id="formEvaluationContent"><div class="empty">動画を選択してAI検出を実行すると、ここに選手別コメントが表示されます。</div></div>
-  <div class="card" style="margin-top:14px"><h2>チームの約束事チェック</h2><p class="hint">動画を再生し、該当場面で達成・未達成・判定保留を記録します。記録内容から良かった点と改善コメントを自動作成します。</p><label>約束事を追加</label><div class="actions"><input id="promiseNewText" placeholder="例：ボールがウイングから離れたらヘルプへローテーション"><button class="primary" onclick="addPromiseRule()">追加</button></div><div id="promiseRuleList"></div><div id="promiseReviewList" style="margin-top:12px"></div><div class="actions"><button class="primary" onclick="generatePromiseComments()">改善コメントを作成</button><button onclick="exportPromiseReview()">チェック結果を保存</button></div><div id="promiseCommentOutput"></div></div>
-  <p class="hint">注意：動画全体で検出できた姿勢の傾向から作る参考コメントです。リリース直前だけを切り出した評価ではありません。選手の重なり、画角、遮蔽、検出不足がある場合は判定を保留します。IDは簡易追跡のため、途中で入れ替わる可能性があります。</p>
+  <h2>🎥 試合動画・オフェンス／ディフェンス戦術レビュー</h2>
+  <p class="hint">動画分析タブで読み込んだ動画の再生位置を取り込み、場面ごとに評価を保存します。タイムスタンプは動画の再生時間から自動取得します。このタブは骨格・関節角度を評価せず、状況判断・ポジショニングの意図・チーム約束事の遂行を評価します。映像を見ながら状況を選ぶと、バスケットボールの原則に基づく戦術分析支援が理由と次のアクションを作成します。映像認識だけでプレーの意図やチームルールを確定できないため、選択内容はコーチが確認してください。</p>
+  <div class="metricgrid">
+   <div class="metric"><span>動画の現在位置</span><b id="tacticalCurrentTime">0:00</b></div>
+   <div class="metric"><span>登録した場面</span><b id="tacticalCount">0</b></div>
+  </div>
+  <div class="actions">
+   <button class="primary" onclick="captureTacticalTime()">動画の現在位置を取り込む</button>
+   <button onclick="openVideoAnalysisTab()">動画分析タブへ戻る</button>
+  </div>
+  <label>判定</label>
+  <select id="tacticalType">
+   <option value="good">良いプレー（オフェンスの成功要因）</option>
+   <option value="improve">改善が必要（ディフェンスの課題）</option>
+  </select>
+  <h3>状況判断の評価（骨格フォーム・関節角度は評価対象外）</h3>
+  <label>攻撃側の意図</label>
+  <select id="tacticalOffenseIntent">
+   <option value="drive">ドライブでペイントへ侵入</option><option value="pass">パスでズレを作る・展開</option><option value="screen">スクリーンを使って有利を作る</option><option value="shoot">シュート機会を作る</option><option value="cut">カット・バックドアで裏を取る</option><option value="transition">速攻・トランジション</option><option value="other">その他／不明</option>
+  </select>
+  <label>ディフェンスの対応</label>
+  <select id="tacticalDefenseRead">
+   <option value="ahead">コース・パスを予測して先回り</option><option value="late">後手に回り追いかけている</option><option value="contain">進行方向を限定して止めている</option><option value="help">ヘルプに出て味方をカバー</option><option value="rotate">ローテーションで次の相手をカバー</option><option value="unknown">判断できない</option>
+  </select>
+  <label>プレッシャー・間合いの意図</label>
+  <select id="tacticalPressure">
+   <option value="close">密着してシュート／ボールを封じる</option><option value="gap">距離を取りドライブを警戒</option><option value="deny">パスコースを消す・ディナイ</option><option value="sag">ヘルプ優先であえて離れる</option><option value="unclear">意図が読み取れない</option>
+  </select>
+  <label>スクリーンへの対応（該当する場合）</label>
+  <select id="tacticalScreen">
+   <option value="none">スクリーンなし</option><option value="fight">ファイトオーバー</option><option value="under">アンダー</option><option value="switch">スイッチ</option><option value="show">ショウ／ヘッジ</option><option value="slip">スリップ等への対応</option><option value="unknown">約束事・対応が不明</option>
+  </select>
+  <label>プレーの結果</label>
+  <select id="tacticalOutcome">
+   <option value="advantage">攻撃側が数的・位置的優位を獲得</option><option value="stop">守備側が侵入・パス・シュートを抑えた</option><option value="score">得点につながった</option><option value="turnover">ターンオーバーになった</option><option value="reset">優位を作れず攻撃をやり直した</option><option value="unknown">結果不明</option>
+  </select>
+  <label>場面・プレー内容</label>
+  <input id="tacticalScene" placeholder="例：右ウイングからドライブ、ヘルプが遅れた">
+  <label>詳細な理由（何が起きたか／なぜ良い・悪いか）</label>
+  <textarea id="tacticalReason" rows="3" placeholder="例：ボールマンとの間合いが広く、ドライブの進行方向に先回りできなかった。"></textarea>
+  <label>次のアクション・具体的な修正</label>
+  <textarea id="tacticalAction" rows="2" placeholder="例：ドライブ開始前に半歩下がって構え、胸で進行コースに入る。"></textarea>
+  <div class="actions"><button class="primary" onclick="saveTacticalScene()">この場面を保存</button><button onclick="exportTacticalReview()">分析レポートをJSON保存</button><button onclick="exportTacticalCSV()">CSV保存</button></div>
+ </div>
+ <div class="card">
+  <h2>分析観点チェック</h2>
+  <div class="metricgrid">
+   <div class="metric"><b>ディフェンス</b><p>予測して先回りできたか・ドライブ／パスコースの制限・間合いの意図・スクリーンの約束事（ファイトオーバー／アンダー／スイッチ／ショウ）・ヘルプ判断・ローテーション</p></div>
+   <div class="metric"><b>オフェンス</b><p>スペーシング・ドライブ／パス判断・スクリーン活用・パスの精度とタイミング・シュートまでの連携</p></div>
+  </div>
+  <p class="hint">最大10場面をレポートに表示します。場面が10件未満の場合は登録分のみ表示します。</p><p class="hint">参考原則：JBAの指導で重視される状況判断、スペーシング、ボールと人の動き、ヘルプ＆ローテーション、スクリーン対応、チームの約束事という一般的な戦術概念を反映。JBAの全教材・全プレーを取り込んだものではありません。</p>
+ </div>
+ <div class="card">
+  <h2>保存した場面レビュー（最大10件）</h2>
+  <div id="tacticalReviewStatus" class="metric">まだ場面が登録されていません。</div>
+  <div id="tacticalReviewList"><div class="empty">動画を再生し、場面ごとに現在位置を取り込んで評価を保存してください。</div></div>
  </div>
 </section>
+
 <section id="players" class="panel">
  <div class="card"><h2 id="oppRosterHeading">相手選手スカウティング</h2><p class="hint">相手選手ごとに特徴を直接記録します。3P成功は試投数も加算します。</p><div id="oppRoster" class="roster"></div></div>
  <div class="card"><h2 id="oppTotalsHeading">相手選手の傾向</h2><div id="oppTotals"></div></div>
@@ -187,7 +259,7 @@ h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px}
  </div>
 </section>
 <section id="report" class="panel">
- <div class="card"><h2>分析レポート</h2><p class="hint">動画時刻に紐づけた得点と、約束事の達成・未達成チェックをまとめます。自動コメントは記録結果に基づく端末内ルール生成です。</p><div id="reportContent"></div><div class="actions no-print"><button class="primary" onclick="window.print()">PDFとして保存・印刷</button><button onclick="exportJSON()">データを書き出す</button><button onclick="exportCSV()">CSVを書き出す</button></div><p class="hint no-print">PDFボタンから印刷画面を開き、保存先で「PDFに保存」を選択してください。</p></div>
+ <div class="card"><h2>試合レポート</h2><div id="reportContent"></div><div class="actions no-print"><button class="primary" onclick="window.print()">PDFとして保存・印刷</button><button onclick="exportJSON()">データを書き出す</button><button onclick="exportCSV()">CSVを書き出す</button></div><p class="hint no-print">PDFボタンから印刷画面を開き、保存先で「PDFに保存」を選択してください。</p></div>
 </section>
 <div class="actions no-print">
  <button onclick="undo()">↶ 直前取消</button><button onclick="saveNow()">保存</button><button class="danger" onclick="resetGame()">試合データをリセット</button>
@@ -227,7 +299,7 @@ function snapshot(){history.push(JSON.stringify(state));if(history.length>80)his
 function undo(){if(!history.length){toast('取り消せる操作がありません');return}state=JSON.parse(history.pop());persist();toast('直前の操作を取り消しました')}
 function toast(t){let el=document.getElementById('toast');if(!el){el=document.createElement('div');el.id='toast';el.style='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#14243a;color:white;padding:10px 16px;border-radius:20px;z-index:20;font-size:13px';document.body.append(el)}el.textContent=t;el.style.display='block';clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>el.style.display='none',1800)}
 function total(k){return state.own.reduce((a,p)=>a+(p[k]||0),0)}
-function score(){return (state.ownQ||[]).reduce((a,b)=>a+(Number(b)||0),0)}
+function score(){return total('p2m')*2+total('p3m')*3+total('ftm')}
 function sumOpp(k){return state.opp.reduce((a,p)=>a+(p[k]||0),0)}
 function bumpOwn(i,k){snapshot();let p=state.own[i];p[k]++;if(k==='p2m')p.p2a++;if(k==='p3m')p.p3a++;if(k==='ftm')p.fta++;let pts=k==='p2m'?2:k==='p3m'?3:k==='ftm'?1:0;state.ownQ[state.q]+=pts;persist()}
 function bumpOpp(i,k){snapshot();let p=state.opp[i];p[k]++;if(k==='threeMade')p.three++;persist()}
@@ -259,82 +331,34 @@ add(t.halfPress>=2,'ハーフコートプレスを使用',`記録 ${t.halfPress}
 return r}
 function renderTotals(){let pct=(m,a)=>a?(m/a*100).toFixed(1)+'%':'0.0%';document.getElementById('ownTotals').innerHTML=`<div class="metricgrid">${[['2P',total('p2m'),total('p2a'),pct(total('p2m'),total('p2m')+total('p2a'))],['3P',total('p3m'),total('p3a'),pct(total('p3m'),total('p3m')+total('p3a'))],['FT',total('ftm'),total('fta'),pct(total('ftm'),total('ftm')+total('fta'))],['REB',total('or')+total('dr')],['AST',total('ast')],['ST',total('st')],['BLK',total('blk')],['TO',total('to')],['PF',total('pf')]].map(x=>`<div class="metric"><span>${x[0]}</span><b>${x.length>2?x[1]+'/'+(x[1]+x[2])+' '+x[3]:x[1]}</b></div>`).join('')}</div>`;
 document.getElementById('oppTotals').innerHTML=`<div class="metricgrid">${[['右ドライブ',sumOpp('rd')],['左ドライブ',sumOpp('ld')],['3P',sumOpp('threeMade')+'/'+sumOpp('three')],['ゴール下',sumOpp('inside')],['ミドル',sumOpp('mid')],['TO',sumOpp('turnover')]].map(x=>`<div class="metric"><span>${x[0]}</span><b>${x[1]}</b></div>`).join('')}</div>`}
+
 function syncTeamNames(){
- const own=String(state.ownName||'自チーム').trim()||'自チーム';
- const opp=String(state.oppName||'対戦相手').trim()||'対戦相手';
- const set=(id,value)=>{const e=document.getElementById(id);if(e)e.textContent=value};
- set('ownLabel',own);set('oppLabel',opp);set('ownScoreCaption',own+'得点');
- set('ownTabLabel',own);set('oppPlayersTabLabel',opp+'選手');set('oppScoutTabLabel',opp+'チーム');
- set('ownRosterHeading',own+'選手別スタッツ');set('ownTotalsHeading',own+'チーム集計');
- set('oppRosterHeading',opp+'選手スカウティング');set('oppTotalsHeading',opp+'選手の傾向');
- set('oppAttackHeading',opp+'の攻撃パターン');set('oppDefenseHeading',opp+'の守備パターン');set('oppOtherHeading',opp+'のリバウンド・失点傾向');
- set('adviceHeading',own+'の対 '+opp+' 対策候補');
- const ownInput=document.getElementById('ownName'),oppInput=document.getElementById('oppName');
- if(ownInput&&ownInput.value!==state.ownName)ownInput.value=state.ownName;
- if(oppInput&&oppInput.value!==state.oppName)oppInput.value=state.oppName;
-}
-function renderHeader(){syncTeamNames();document.getElementById('ownScore').textContent=score();document.getElementById('oppScore').textContent=state.oppQ.reduce((a,b)=>a+b,0)}
-function renderReport(){
- let rec=recommendations();
- document.getElementById('recommendations').innerHTML=rec.length?rec.map(r=>`<div class="rec ${r.high?'high':''}"><h3>${esc(r.title)} <span class="badge">${r.high?'優先度高':'確認候補'}</span></h3><p>${esc(r.detail)}</p></div>`).join(''):'<div class="empty">まだ傾向を検出していません。相手のプレーを記録すると対策候補が表示されます。</div>';
- const own=state.own,opp=state.opp,ownScore=score(),oppScore=state.oppQ.reduce((a,b)=>a+b,0),diff=ownScore-oppScore;
- const sum=k=>total(k),attempt=(m,a)=>sum(m)+sum(a),pct=(m,a)=>attempt(m,a)?Math.round(sum(m)/attempt(m,a)*100):0;
- const reb=sum('or')+sum('dr'),ast=sum('ast'),to=sum('to'),p2=pct('p2m','p2a'),p3=pct('p3m','p3a'),ft=pct('ftm','fta');
- const sortedPts=own.map(p=>({...p,pts:p.p2m*2+p.p3m*3+p.ftm,reb:p.or+p.dr})).filter(p=>p.name||p.pts||p.reb||p.ast).sort((a,b)=>b.pts-a.pts);
- const sortedReb=sortedPts.slice().sort((a,b)=>b.reb-a.reb),sortedAst=sortedPts.slice().sort((a,b)=>b.ast-a.ast);
- const qmax=Math.max(1,...state.ownQ,...state.oppQ);
- const result=diff>0?'WIN':diff<0?'LOSS':'DRAW',resultLabel=diff>0?'勝利':diff<0?'敗戦':'同点';
- const good=[],improve=[];
- if(ast>to)good.push(`アシスト ${ast} に対してターンオーバー ${to}。ボールを動かして攻撃を組み立てられています。`);
- if(reb>=30)good.push(`リバウンド ${reb}本を確保。セカンドチャンスと守備の終わり方を支えています。`);
- if(p3>=30)good.push(`3P成功率 ${p3}%。外角シュートが得点源になっています。`);
- if(!good.length)good.push('記録されたスタッツを蓄積中です。プレーごとの記録を増やすと、強みをより具体的に評価できます。');
- if(to>ast)improve.push(`ターンオーバー ${to} がアシスト ${ast} を上回っています。キャッチ前の視野確保とパス判断を重点確認。`);
- if(p2<40&&attempt('p2m','p2a')>=5)improve.push(`2P成功率 ${p2}%。ゴール下のフィニッシュとコンタクト後のバランスを確認。`);
- if(p3<25&&attempt('p3m','p3a')>=5)improve.push(`3P成功率 ${p3}%。キャッチからリリースまでの準備とシュート選択を確認。`);
- if(!improve.length)improve.push('大きな改善傾向はまだ特定できません。動画の約束事チェックと合わせて次の課題を絞り込みましょう。');
- const playerTable=(list,key,label)=>list.slice(0,5).map(p=>`<tr><td>#${esc(p.no)} ${esc(p.name||'未登録')}</td><td>${p[key]}</td></tr>`).join('')||`<tr><td colspan="2">記録なし</td></tr>`;
- const qbars=state.ownQ.map((v,i)=>`<div class="qrow"><b>${qNames[i]}</b><div class="qtrack"><span style="width:${Math.round(v/qmax*100)}%"></span></div><strong>${v}</strong><div class="qtrack opp"><span style="width:${Math.round(state.oppQ[i]/qmax*100)}%"></span></div><strong>${state.oppQ[i]}</strong></div>`).join('');
- const oppRows=opp.filter(p=>p.name||p.rd+p.ld+p.three+p.inside+p.mid+p.turnover>0).map(p=>`<tr><td>#${esc(p.no)} ${esc(p.name||'未登録')}</td><td>${p.rd}</td><td>${p.ld}</td><td>${p.threeMade}/${p.three}</td><td>${p.inside}</td><td>${p.turnover}</td></tr>`).join('')||'<tr><td colspan="6">記録なし</td></tr>';
- document.getElementById('reportContent').innerHTML=`<div class="report-hero"><div><span class="report-kicker">MATCH REPORT</span><h2>${esc(state.ownName)} <small>vs</small> ${esc(state.oppName)}</h2><span class="report-result">${resultLabel}</span></div><div class="report-score"><strong>${ownScore}</strong><span> - </span><strong>${oppScore}</strong></div><div class="report-diff">${diff>0?'+':''}${diff}点</div></div>
- <div class="report-grid"><div class="report-stat"><small>リバウンド</small><b>${reb}</b></div><div class="report-stat"><small>アシスト</small><b>${ast}</b></div><div class="report-stat"><small>ターンオーバー</small><b>${to}</b></div><div class="report-stat"><small>スティール</small><b>${sum('st')}</b></div></div>
- <div class="report-section"><h3>クォーター別得点</h3><div class="qlegend"><span>■ ${esc(state.ownName)}</span><span>■ ${esc(state.oppName)}</span></div>${qbars}</div>
- <div class="report-section"><h3>シュート成功率</h3>${[['2P',p2,sum('p2m'),attempt('p2m','p2a')],['3P',p3,sum('p3m'),attempt('p3m','p3a')],['FT',ft,sum('ftm'),attempt('ftm','fta')]].map(x=>`<div class="shoot-row"><div><b>${x[0]}</b><span>${x[2]} / ${x[3]}</span><strong>${x[1]}%</strong></div><div class="shoot-track"><span style="width:${x[1]}%"></span></div></div>`).join('')}</div>
- <div class="report-section"><h3>コーチ総評</h3><div class="comment-columns"><div><h4>良かった点</h4><ul>${good.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div><div><h4>改善ポイント</h4><ul>${improve.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div></div></div>
- <div class="report-section report-leaders"><div><h3>得点上位</h3><table class="printtable"><tr><th>選手</th><th>PTS</th></tr>${playerTable(sortedPts,'pts','PTS')}</table></div><div><h3>リバウンド上位</h3><table class="printtable"><tr><th>選手</th><th>REB</th></tr>${playerTable(sortedReb,'reb','REB')}</table></div><div><h3>アシスト上位</h3><table class="printtable"><tr><th>選手</th><th>AST</th></tr>${playerTable(sortedAst,'ast','AST')}</table></div></div>
- <div class="report-section"><h3>${esc(state.oppName)}のチーム傾向</h3><p>${Object.entries(groups).map(([g,items])=>items.map(([l,k])=>`${l} ${state.team[k]||0}回`).join(' ／ ')).join(' ／ ')}</p><div class="tablewrap"><table class="printtable"><tr><th>相手選手</th><th>右D</th><th>左D</th><th>3P成功/試投</th><th>ゴール下</th><th>TO</th></tr>${oppRows}</table></div></div>
- <div class="report-section"><h3>次戦への対策候補</h3>${rec.map(r=>`<div class="rec ${r.high?'high':''}"><b>${esc(r.title)}</b><p>${esc(r.detail)}</p></div>`).join('')||'<p>対策候補はまだありません。</p>'}</div>`;
- appendVideoReviewToReport();
- appendGeminiAIToReport();
+ const own=(document.getElementById('ownName')?.value||'自チーム').trim()||'自チーム';
+ const opp=(document.getElementById('oppName')?.value||'対戦相手').trim()||'対戦相手';
+ const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
+ set('ownLabel',own);
+ set('ownScoreCaption',own+'得点');
+ set('oppLabel',opp);
+ set('ownTabLabel',own);
+ set('cameraTabLabel',own+' カメラ分析');
+ set('oppPlayersTabLabel',opp+'選手');
+ set('oppScoutTabLabel',opp+'チーム');
+ set('ownRosterHeading',own+'選手別スタッツ');
+ set('ownTotalsHeading',own+' チーム集計');
+ set('oppPlayersHeading',opp+'選手データ');
+ set('oppScoutHeading',opp+'チーム分析');
+ set('cameraShotHeading',own+' 撮影を見ながらシュート記録');
+ set('cameraFormHeading',own+' 撮影メモ・フォーム確認');
+ const title=document.querySelector('header h1');
+ if(title) title.textContent='🏀 '+own+' Basketball Scout';
 }
 
-// --- Offline promise review and video-timestamped score logging ---
-const PROMISE_STORE='u15_promise_review_v1';
-const DEFAULT_PROMISES=[
- 'ウイングでボールが止まったらトップがダブルチームに行く',
- 'ヘルプ側はトップへの戻しパスを狙う',
- 'ボールがウイングから離れたらウイングDFがヘルプへローテーションする',
- 'トップDFはダブルチーム側のウイングへローテーションする',
- 'ヘルプDFはトップへローテーションする'
-];
-let promiseData={rules:DEFAULT_PROMISES.map((text,i)=>({id:'pr'+i,text})),reviews:[]};
-try{const saved=JSON.parse(localStorage.getItem(PROMISE_STORE));if(saved&&Array.isArray(saved.rules)&&Array.isArray(saved.reviews))promiseData=saved}catch(e){}
-if(!Array.isArray(state.videoScoreEvents))state.videoScoreEvents=[];
-function savePromiseData(){localStorage.setItem(PROMISE_STORE,JSON.stringify(promiseData));renderPromiseReview()}
-function videoTime(){const v=document.getElementById('analysisVideo');return v&&Number.isFinite(v.currentTime)?v.currentTime:0}
-function stamp(t){t=Math.max(0,Math.floor(t||0));return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')}
-function addVideoScore(side,points){snapshot();const t=videoTime(),entry={id:'vs'+Date.now()+Math.random().toString(36).slice(2,6),side,points:Number(points),q:state.q,time:t,stamp:stamp(t),date:new Date().toISOString()};if(side==='own')state.ownQ[state.q]+=Number(points);else state.oppQ[state.q]+=Number(points);state.videoScoreEvents.push(entry);persist();renderVideoScoreEvents();toast('動画時刻 '+entry.stamp+' の得点を記録しました')}
-function undoVideoScore(id){const i=state.videoScoreEvents.findIndex(x=>x.id===id);if(i<0)return;const e=state.videoScoreEvents[i];snapshot();if(e.side==='own')state.ownQ[e.q]=Math.max(0,state.ownQ[e.q]-e.points);else state.oppQ[e.q]=Math.max(0,state.oppQ[e.q]-e.points);state.videoScoreEvents.splice(i,1);persist();renderVideoScoreEvents()}
-function renderVideoScoreEvents(){const el=document.getElementById('videoScoreEventList');if(!el)return;const own=state.ownQ.reduce((a,b)=>a+b,0),opp=state.oppQ.reduce((a,b)=>a+b,0);const a=document.getElementById('videoOwnScoreNow'),b=document.getElementById('videoOppScoreNow');if(a)a.textContent=own;if(b)b.textContent=opp;const on=document.getElementById('videoOwnNameNow'),op=document.getElementById('videoOppNameNow');if(on)on.textContent=state.ownName;if(op)op.textContent=state.oppName;const list=(state.videoScoreEvents||[]).slice().sort((x,y)=>x.time-y.time);el.innerHTML=list.length?'<table><tr><th>動画時刻</th><th>Q</th><th>得点</th><th></th></tr>'+list.map(e=>'<tr><td>'+e.stamp+'</td><td>'+qNames[e.q]+'</td><td>'+(e.side==='own'?esc(state.ownName):esc(state.oppName))+' ＋'+e.points+'</td><td><button onclick="undoVideoScore(\''+e.id+'\')">取消</button></td></tr>').join('')+'</table>':'<div class="empty">動画からの得点記録はまだありません。動画を止めて得点ボタンを押してください。</div>'}
-function addPromiseRule(){const input=document.getElementById('promiseNewText'),text=(input?.value||'').trim();if(!text)return;promiseData.rules.push({id:'pr'+Date.now(),text});input.value='';savePromiseData()}
-function removePromiseRule(id){promiseData.rules=promiseData.rules.filter(x=>x.id!==id);savePromiseData()}
-function recordPromise(id,status){const rule=promiseData.rules.find(x=>x.id===id);if(!rule)return;const v=document.getElementById('analysisVideo'),memo=prompt('この場面の補足メモ（任意）')||'';promiseData.reviews.push({id:'rv'+Date.now()+Math.random().toString(36).slice(2,5),ruleId:id,rule:rule.text,status,time:videoTime(),stamp:stamp(videoTime()),q:state.q,memo});savePromiseData();generatePromiseComments()}
-function deletePromiseReview(id){promiseData.reviews=promiseData.reviews.filter(x=>x.id!==id);savePromiseData();generatePromiseComments()}
-function renderPromiseReview(){const rules=document.getElementById('promiseRuleList'),reviews=document.getElementById('promiseReviewList');if(rules)rules.innerHTML=promiseData.rules.map(r=>'<div class="metric" style="margin:8px 0"><b>'+esc(r.text)+'</b><div class="actions"><button onclick="recordPromise(\''+r.id+'\',\'達成\')">達成</button><button class="danger" onclick="recordPromise(\''+r.id+'\',\'未達成\')">未達成</button><button onclick="recordPromise(\''+r.id+'\',\'保留\')">保留</button><button onclick="removePromiseRule(\''+r.id+'\')">削除</button></div></div>').join('')||'<div class="empty">約束事を追加してください</div>';if(reviews){const rows=promiseData.reviews.slice().sort((a,b)=>a.time-b.time);reviews.innerHTML=rows.length?'<h3>場面チェック履歴</h3><table><tr><th>時刻/Q</th><th>約束事</th><th>評価</th><th>メモ</th><th></th></tr>'+rows.map(r=>'<tr><td>'+r.stamp+' / '+qNames[r.q]+'</td><td>'+esc(r.rule)+'</td><td>'+esc(r.status)+'</td><td>'+esc(r.memo)+'</td><td><button onclick="deletePromiseReview(\''+r.id+'\')">削除</button></td></tr>').join('')+'</table>':'<div class="empty">動画を見ながら約束事をチェックしてください</div>'}}
-function promiseSummary(){return promiseData.rules.map(rule=>{const rs=promiseData.reviews.filter(r=>r.ruleId===rule.id),yes=rs.filter(r=>r.status==='達成').length,no=rs.filter(r=>r.status==='未達成').length,hold=rs.filter(r=>r.status==='保留').length,total=yes+no;return{rule:rule.text,yes,no,hold,total,rate:total?Math.round(yes/total*100):null}})}
-function generatePromiseComments(){const el=document.getElementById('promiseCommentOutput');if(!el)return;const sum=promiseSummary(),used=sum.filter(x=>x.total>0);if(!used.length){el.innerHTML='<div class="empty">約束事の場面評価を記録すると、改善コメントを作成します。</div>';return}el.innerHTML='<h3>自動コメント（記録内容に基づく）</h3>'+used.map(x=>{let msg=x.rate>=80?'実行できた場面が多く、チームの共通理解が進んでいます。継続して再現性を高めましょう。':x.rate>=50?'実行できた場面とできなかった場面が分かれています。判断の合図と次のローテーションを練習で統一しましょう。':'未達成が目立ちます。最初の動き出しと次の選手のカバー位置を分解して確認し、少人数で反復しましょう。';if(x.no>0)msg+=' 未達成場面は'+x.no+'回。動画の該当時刻を再確認し、誰が最初に動くか、次に誰が埋めるかを明確にしてください。';return '<div class="rec '+(x.rate<50?'high':'')+'"><h4>'+esc(x.rule)+'</h4><p>達成 '+x.yes+'回 / 未達成 '+x.no+'回 / 保留 '+x.hold+'回'+(x.rate===null?'':' / 達成率 '+x.rate+'%')+'</p><p>'+esc(msg)+'</p></div>'}).join('');}
-function exportPromiseReview(){const payload={rules:promiseData.rules,reviews:promiseData.reviews,summary:promiseSummary(),videoScores:state.videoScoreEvents||[]};download('U15_約束事評価と動画得点.json',JSON.stringify(payload,null,2),'application/json')}
-function appendVideoReviewToReport(){const el=document.getElementById('reportContent');if(!el)return;const sum=promiseSummary(),used=sum.filter(x=>x.total>0),scores=(state.videoScoreEvents||[]).slice().sort((a,b)=>a.time-b.time);el.insertAdjacentHTML('beforeend','<h3>チームの約束事評価</h3>'+(used.length?'<table class="printtable"><tr><th>約束事</th><th>達成</th><th>未達成</th><th>保留</th><th>達成率</th></tr>'+used.map(x=>'<tr><td>'+esc(x.rule)+'</td><td>'+x.yes+'</td><td>'+x.no+'</td><td>'+x.hold+'</td><td>'+x.rate+'%</td></tr>').join('')+'</table>':'<p>動画内での約束事チェックはまだありません。</p>')+'<h3>約束事の改善コメント</h3>'+(used.length?used.map(x=>'<p><b>'+esc(x.rule)+'</b><br>'+esc(x.rate<50?'未達成が多いため、最初の動き出しと次のカバーを分けて反復しましょう。':x.rate<80?'判断の合図とローテーションの順番を統一しましょう。':'実行できた場面が多く、継続して再現性を高めましょう。')+'</p>').join(''):'<p>評価記録後に自動作成します。</p>')+'<h3>動画から記録した得点経過</h3>'+(scores.length?'<table class="printtable"><tr><th>動画時刻</th><th>Q</th><th>得点</th></tr>'+scores.map(x=>'<tr><td>'+x.stamp+'</td><td>'+qNames[x.q]+'</td><td>'+(x.side==='own'?esc(state.ownName):esc(state.oppName))+' ＋'+x.points+'</td></tr>').join('')+'</table>':'<p>動画の得点記録はありません。</p>'));}
+function renderHeader(){syncTeamNames();document.getElementById('ownScore').textContent=score();document.getElementById('oppScore').textContent=state.oppQ.reduce((a,b)=>a+b,0)}
+function renderReport(){let rec=recommendations();document.getElementById('recommendations').innerHTML=rec.length?rec.map(r=>`<div class="rec ${r.high?'high':''}"><h3>${esc(r.title)} <span class="badge">${r.high?'優先度高':'確認候補'}</span></h3><p>${esc(r.detail)}</p></div>`).join(''):'<div class="empty">まだ傾向を検出していません。相手のプレーを記録すると対策候補が表示されます。</div>';
+let rows=state.own.map(p=>`<tr><td>${esc(p.no)}</td><td>${esc(p.name)}</td><td>${p.p2m*2+p.p3m*3+p.ftm}</td><td>${p.p2m}/${p.p2m+p.p2a}</td><td>${p.p3m}/${p.p3a}</td><td>${p.ftm}/${p.fta}</td><td>${p.or+p.dr}</td><td>${p.ast}</td><td>${p.st}</td><td>${p.to}</td></tr>`).join('');
+let oppRows=state.opp.filter(p=>p.name||p.rd+p.ld+p.three+p.inside+p.mid+p.turnover>0).map(p=>`<tr><td>${esc(p.no)}</td><td>${esc(p.name)}</td><td>${p.rd}</td><td>${p.ld}</td><td>${p.threeMade}/${p.three}</td><td>${p.inside}</td><td>${p.turnover}</td></tr>`).join('');
+document.getElementById('reportContent').innerHTML=`<p><b>${esc(state.ownName)} ${score()} - ${state.oppQ.reduce((a,b)=>a+b,0)} ${esc(state.oppName)}</b></p><h3>Q別スコア</h3><div class="tablewrap"><table class="printtable"><tr><th>Q</th>${qNames.map(q=>`<th>${q}</th>`).join('')}<th>合計</th></tr><tr><th>${esc(state.ownName)}</th>${state.ownQ.map(v=>`<td>${v}</td>`).join('')}<td>${score()}</td></tr><tr><th>${esc(state.oppName)}</th>${state.oppQ.map(v=>`<td>${v}</td>`).join('')}<td>${state.oppQ.reduce((a,b)=>a+b,0)}</td></tr></table></div><h3>${esc(state.ownName)}選手別</h3><div class="tablewrap"><table class="printtable"><tr><th>No.</th><th>選手</th><th>PTS</th><th>2P</th><th>3P</th><th>FT</th><th>REB</th><th>AST</th><th>ST</th><th>TO</th></tr>${rows}</table></div><h3>${esc(state.oppName)}選手別</h3><div class="tablewrap"><table class="printtable"><tr><th>No.</th><th>選手</th><th>右D</th><th>左D</th><th>3P</th><th>ゴール下</th><th>TO</th></tr>${oppRows}</table></div><h3>${esc(state.oppName)}のチーム傾向</h3><p>${Object.entries(groups).map(([g,items])=>items.map(([l,k])=>`${l} ${state.team[k]||0}回`).join(' ／ ')).join('<br>')}</p><h3>自動対策候補</h3>${rec.map(r=>`<p><b>${esc(r.title)}</b>：${esc(r.detail)}</p>`).join('')||'<p>検出された候補なし</p>'}`}
+
 
 // --- Local video review and multi-player manual joint measurement ---
 let analysisVideoUrl=null, activeJoint='shoulder';
@@ -396,8 +420,74 @@ function newGame(){if(!confirm('現在の試合をリセットします。必要
 let cameraStream=null;
 async function startCamera(){
  const video=document.getElementById('cameraVideo');
+ const status=document.getElementById('cameraStatus');
  if(!navigator.mediaDevices?.getUserMedia){toast('この環境ではカメラを利用できません。HTTPSで開いてください');return}
- try{cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});video.srcObject=cameraStream;await video.play();document.getElementById('cameraStatus').textContent='カメラ起動中。フォーム撮影は横から、全身とボールが入る画角がおすすめです。'}catch(e){document.getElementById('cameraStatus').textContent='カメラを起動できません。ブラウザ／アプリのカメラ権限とHTTPS接続を確認してください。';toast('カメラ権限を確認してください')}}
+ // 起動済みのカメラを止めてから、背面カメラを優先して取り直す
+ if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null}
+ video.srcObject=null;
+ const base={width:{ideal:1280},height:{ideal:720}};
+ try{
+   // exact を使い、前面カメラではなく背面カメラを明示的に要求
+   try{
+     cameraStream=await navigator.mediaDevices.getUserMedia({video:{...base,facingMode:{exact:'environment'}},audio:false});
+   }catch(firstError){
+     // 一部端末で exact が非対応の場合、背面カメラ名を探して指定
+     const devices=await navigator.mediaDevices.enumerateDevices();
+     const backs=devices.filter(d=>d.kind==='videoinput'&&/(back|rear|environment|背面|外側)/i.test(d.label));
+     if(backs.length){
+       cameraStream=await navigator.mediaDevices.getUserMedia({video:{...base,deviceId:{exact:backs[0].deviceId}},audio:false});
+     }else{
+       // ラベルを取得できない端末向けの互換フォールバック
+       cameraStream=await navigator.mediaDevices.getUserMedia({video:{...base,facingMode:{ideal:'environment'}},audio:false});
+     }
+   }
+   video.srcObject=cameraStream;
+   await video.play();
+   const track=cameraStream.getVideoTracks()[0];
+   const settings=track?.getSettings?.()||{};
+   const rear=settings.facingMode==='environment';
+   status.textContent=(rear?'背面カメラで起動中。':'カメラ起動中（背面カメラを指定しましたが、端末側の選択を確認してください）。')+'フォーム撮影は横から、全身とボールが入る画角がおすすめです。';
+ }catch(e){
+   status.textContent='カメラを起動できません。Chromeのカメラ権限を許可し、HTTPSで開いてください。背面カメラが他のアプリで使用中なら閉じて再試行してください。';
+   toast('背面カメラを起動できませんでした。カメラ権限を確認してください');
+ }
+}
+
+async function switchCamera(){
+ const video=document.getElementById('cameraVideo');
+ const status=document.getElementById('cameraStatus');
+ if(!navigator.mediaDevices?.enumerateDevices||!navigator.mediaDevices?.getUserMedia){
+   toast('このブラウザではカメラ切替を利用できません');return;
+ }
+ try{
+   // 起動中の映像から現在のカメラを特定し、次のカメラへ切り替える
+   const devices=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='videoinput');
+   if(devices.length<2){
+     status.textContent='切替可能なカメラが2台見つかりません。カメラ権限を許可してから再試行してください。';
+     toast('カメラが1台しか認識されていません');return;
+   }
+   const currentTrack=cameraStream?.getVideoTracks?.()[0];
+   const currentId=currentTrack?.getSettings?.().deviceId;
+   let index=devices.findIndex(d=>d.deviceId===currentId);
+   const next=devices[(index+1+devices.length)%devices.length];
+   if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}
+   video.srcObject=null;
+   cameraStream=await navigator.mediaDevices.getUserMedia({
+     video:{deviceId:{exact:next.deviceId},width:{ideal:1280},height:{ideal:720}},
+     audio:false
+   });
+   video.srcObject=cameraStream;
+   await video.play();
+   const track=cameraStream.getVideoTracks()[0];
+   const label=next.label||track?.label||'選択したカメラ';
+   status.textContent='カメラ切替完了：'+label+'。もう一度押すと次のカメラに切り替わります。';
+   toast('カメラを切り替えました');
+ }catch(e){
+   status.textContent='カメラを切り替えられませんでした。カメラ権限を確認してください。';
+   toast('カメラ切替に失敗しました');
+ }
+}
+
 function stopCamera(){if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null}let v=document.getElementById('cameraVideo');if(v)v.srcObject=null;let st=document.getElementById('cameraStatus');if(st)st.textContent='カメラ停止中';}
 function captureFrame(){let v=document.getElementById('cameraVideo');if(!cameraStream||!v.videoWidth){toast('先にカメラを起動してください');return}let c=document.getElementById('cameraCanvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);let a=document.createElement('a');a.href=c.toDataURL('image/jpeg',.9);a.download='U15_shot_frame_'+Date.now()+'.jpg';a.click();toast('静止画を保存しました')}
 function refreshShotPlayers(){let el=document.getElementById('shotPlayer');if(!el)return;let old=el.value;el.innerHTML=state.own.map((p,i)=>`<option value="${i}">#${esc(p.no)} ${esc(p.name||'選手'+(i+1))}</option>`).join('');if(old!==''&&Number(old)<state.own.length)el.value=old}
@@ -406,7 +496,31 @@ function renderCameraAnalysis(){refreshShotPlayers();let log=state.shotLog||[];l
 let notes=document.getElementById('formNotes');if(notes)notes.innerHTML=(state.formNotes||[]).slice(0,10).map(n=>`<div class="metric"><span>${esc(n.date)} #${esc(n.no)} ${esc(n.name)}<br><small>肘:${esc(n.elbow)} / リリース:${esc(n.release)} / 下半身:${esc(n.legs)} / フォロー:${esc(n.follow)}<br>${esc(n.memo)}</small></span></div>`).join('')||'<div class="empty">フォームメモはまだありません</div>'}
 function saveFormNote(){let i=Number(document.getElementById('shotPlayer').value),p=state.own[i];if(!p)return;snapshot();state.formNotes.unshift({date:new Date().toLocaleString('ja-JP'),no:p.no,name:p.name,elbow:document.getElementById('formElbow').value,release:document.getElementById('formRelease').value,legs:document.getElementById('formLegs').value,follow:document.getElementById('formFollow').value,memo:document.getElementById('formMemo').value});persist();renderCameraAnalysis();toast('フォームメモを保存しました')}
 function exportShotCSV(){let rows=[['日時','Q','背番号','選手','種類','位置','結果'],...(state.shotLog||[]).map(x=>[x.at,x.q,x.no,x.name,x.type,x.zone,x.made?'成功':'失敗'])];download('U15_shot_analysis.csv','\ufeff'+rows.map(r=>r.map(csv).join(',')).join('\n'),'text/csv;charset=utf-8')}
-function render(){renderQuarterButtons();renderCameraAnalysis();renderHeader();renderRoster();renderTotals();document.getElementById('attackMetrics').innerHTML=metricsHTML('attack');document.getElementById('defenseMetrics').innerHTML=metricsHTML('defense');document.getElementById('otherMetrics').innerHTML=metricsHTML('other');renderReport();renderRotation();renderGames();localStorage.setItem(STORE,JSON.stringify(state))}
+
+function playerStats(p){
+ const pts=(p.p2m||0)*2+(p.p3m||0)*3+(p.ftm||0);
+ const reb=(p.or||0)+(p.dr||0);
+ const fgm=(p.p2m||0)+(p.p3m||0), fga=(p.p2m||0)+(p.p2a||0)+(p.p3m||0)+(p.p3a||0);
+ const fg=fga?(fgm/fga*100):0;
+ return {pts,reb,oreb:p.or||0,dreb:p.dr||0,fgm,fga,threeM:p.p3m||0,threeA:(p.p3m||0)+(p.p3a||0),ftm:p.ftm||0,fta:(p.ftm||0)+(p.fta||0),fg};
+}
+function renderStats(){
+ const active=state.own.filter(p=>p.name||playerStats(p).pts||playerStats(p).reb||playerStats(p).fga||playerStats(p).fta);
+ const all=state.own.map(p=>({p,...playerStats(p)}));
+ const team=all.reduce((a,x)=>{for(const k of ['pts','reb','oreb','dreb','fgm','fga','threeM','threeA','ftm','fta'])a[k]+=x[k];return a;},{pts:0,reb:0,oreb:0,dreb:0,fgm:0,fga:0,threeM:0,threeA:0,ftm:0,fta:0});
+ const pct=(m,a)=>a?(m/a*100).toFixed(1)+'%':'—';
+ const summary=document.getElementById('statsTeamSummary');
+ if(!summary)return;
+ summary.innerHTML=[['PTS',team.pts],['REB',team.reb],['OREB',team.oreb],['DREB',team.dreb],['FGM / FGA',`${team.fgm} / ${team.fga}`],['3PM / 3PA',`${team.threeM} / ${team.threeA}`],['FTM / FTA',`${team.ftm} / ${team.fta}`],['FG%',pct(team.fgm,team.fga)]].map(([k,v])=>`<div class="metric"><span>${k}</span><b>${v}</b></div>`).join('');
+ const top=key=>all.filter(x=>x.p.name||x[key]>0).sort((a,b)=>b[key]-a[key]).slice(0,3);
+ const pts=document.getElementById('statsTopPoints'), reb=document.getElementById('statsTopRebounds');
+ const pointTop=top('pts'), reboundTop=top('reb');
+ if(pts)pts.innerHTML=pointTop.length?pointTop.map((x,i)=>`<div class="metric"><span>${i+1}位　${esc(x.p.no)} ${esc(x.p.name||'選手名未登録')}</span><b>${x.pts} PTS</b></div>`).join(''):'<div class="empty">得点記録がありません</div>';
+ if(reb)reb.innerHTML=reboundTop.length?reboundTop.map((x,i)=>`<div class="metric"><span>${i+1}位　${esc(x.p.no)} ${esc(x.p.name||'選手名未登録')}</span><b>${x.reb} REB</b><small>OREB ${x.oreb} / DREB ${x.dreb}</small></div>`).join(''):'<div class="empty">リバウンド記録がありません</div>';
+ const table=document.getElementById('statsPlayerTable');
+ if(table)table.innerHTML=`<table class="printtable"><tr><th>No.</th><th>選手</th><th>PTS</th><th>REB</th><th>OREB</th><th>DREB</th><th>FGM/FGA</th><th>3PM/3PA</th><th>FTM/FTA</th><th>FG%</th></tr>${active.map(p=>{const x=playerStats(p);return `<tr><td>${esc(p.no)}</td><td>${esc(p.name||'—')}</td><td>${x.pts}</td><td>${x.reb}</td><td>${x.oreb}</td><td>${x.dreb}</td><td>${x.fgm}/${x.fga}</td><td>${x.threeM}/${x.threeA}</td><td>${x.ftm}/${x.fta}</td><td>${pct(x.fgm,x.fga)}</td></tr>`}).join('')}</table>`;
+}
+function render(){renderQuarterButtons();renderCameraAnalysis();renderHeader();renderRoster();renderTotals();renderStats();document.getElementById('attackMetrics').innerHTML=metricsHTML('attack');document.getElementById('defenseMetrics').innerHTML=metricsHTML('defense');document.getElementById('otherMetrics').innerHTML=metricsHTML('other');renderReport();renderRotation();renderGames();localStorage.setItem(STORE,JSON.stringify(state))}
 function exportJSON(){download('U15_scout_backup.json',JSON.stringify(state,null,2),'application/json')}
 function exportCSV(){let lines=[[state.ownName+'背番号','選手名','PTS','2P成功','2P試投','3P成功','3P試投','FT成功','FT試投','OR','DR','AST','ST','BLK','TO','PF'].join(',')];state.own.forEach(p=>lines.push([p.no,p.name,p.p2m*2+p.p3m*3+p.ftm,p.p2m,p.p2m+p.p2a,p.p3m,p.p3a,p.ftm,p.fta,p.or,p.dr,p.ast,p.st,p.blk,p.to,p.pf].map(csv).join(',')));lines.push('');lines.push(csv(state.oppName+'選手背番号')+',選手名,右ドライブ,左ドライブ,3P成功,3P試投,ゴール下,ミドル,TO,ファウル');state.opp.forEach(p=>lines.push([p.no,p.name,p.rd,p.ld,p.threeMade,p.three,p.inside,p.mid,p.turnover,p.foul].map(csv).join(',')));download('U15_scout.csv','\ufeff'+lines.join('\n'),'text/csv;charset=utf-8')}
 function csv(x){return '"'+String(x??'').replace(/"/g,'""')+'"'}
@@ -419,74 +533,15 @@ function renderQuarterButtons(){let el=document.getElementById('quarters');if(el
  input.addEventListener('change',e=>{state[id==='ownName'?'ownName':'oppName']=e.target.value.trim()||(id==='ownName'?'自チーム':'対戦相手');persist();});
 });
 renderQuarterButtons();
-// 動画分析・評価レポート・試合レポートを1つのタブに統合
-const videoPanel=document.getElementById('videoAnalysis');
-['evaluationReport','report'].forEach(id=>{const section=document.getElementById(id);if(section){const card=section.querySelector('.card');if(card)videoPanel.appendChild(card);section.remove()}});
-const videoTab=document.querySelector('[data-tab="videoAnalysis"]');if(videoTab)videoTab.textContent='動画分析・分析レポート';
-document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));if(b.dataset.tab==='videoAnalysis'){renderReport();renderGeminiResult()}if(b.dataset.tab==='camera')renderCameraAnalysis()}));
-render();renderRotation();renderGames();updateClock();renderPromiseReview();renderVideoScoreEvents();renderGeminiResult();
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));if(b.dataset.tab==='report')renderReport();if(b.dataset.tab==='camera')renderCameraAnalysis()}));
+render();renderRotation();renderGames();updateClock();
 
-// --- Gemini video understanding: free-tier model only, no paid-model fallback ---
-const GEMINI_FREE_MODEL='gemini-2.5-flash-lite';
-var geminiVideoResult=null;
-try{geminiVideoResult=JSON.parse(localStorage.getItem('u15_gemini_video_analysis_v1')||'null')}catch(e){geminiVideoResult=null}
-function geminiStatus(message){const el=document.getElementById('geminiProgress');if(el)el.textContent=message}
-function geminiJsonFromText(text){let t=String(text||'').trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');try{return JSON.parse(t)}catch(e){const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a>=0&&b>a)return JSON.parse(t.slice(a,b+1));throw new Error('AIの返答をJSONとして読み取れませんでした')}}
-function geminiPrompt(){const rules=(promiseData.rules||[]).map((r,i)=>({id:r.id,rule:r.text}));return `あなたはU15バスケットボールの試合映像を分析するアシスタントです。動画全体を確認し、映像で直接確認できる事実だけを報告してください。推測で選手の意図やプレー結果を断定しないでください。\n自チーム: ${state.ownName}\n対戦相手: ${state.oppName}\nチームの約束事: ${JSON.stringify(rules)}\n\n次のJSONだけを返してください。\n{\n "summary":"試合全体の短い総評",\n "strengths":[{"timestamp_seconds":0,"observation":"映像で確認した良い点","why_good":"なぜ良いか"}],\n "improvements":[{"timestamp_seconds":0,"promise_rule":"関連する約束事。なければ空文字","observation":"映像で確認した改善点","cause":"映像から言える原因。断定できなければ可能性と明記","action":"具体的な修正方法"}],\n "promise_reviews":[{"rule":"登録された約束事の文言","status":"達成|未達成|判定不能","timestamp_seconds":0,"evidence":"映像で確認した根拠","comment":"評価コメント","improvement":"未達成時の改善方法"}],\n "scoreboard":{"visible":true,"final":{"own":0,"opponent":0},"quarters":[{"quarter":1,"own":0,"opponent":0}],"confidence":"高|中|低","notes":"スコアボードの視認性や読み取り上の注意"},\n "scoring_events":[{"timestamp_seconds":0,"quarter":1,"team":"own|opponent","points":2,"confidence":"高|中|低"}],\n "cautions":["映像から判断できない点や分析上の制約"]\n}\n\n重要: 約束事は各ルールごとに動画内で実行場面を探し、確認できる場面がなければ判定不能にしてください。達成・未達成の根拠となる時刻を秒で示してください。スコアボードが映っていない、数字が読めない、Qが不明な場合はvisible=falseまたはconfidence=低とし、得点を創作しないでください。scoring_eventsは得点変化が映像から確認できる場合だけ記載してください。得点のチーム名は自チームならown、相手ならopponentです。`}
-async function geminiUploadVideo(file,key){
- const start=await fetch('https://generativelanguage.googleapis.com/upload/v1beta/files',{method:'POST',headers:{'x-goog-api-key':key,'X-Goog-Upload-Protocol':'resumable','X-Goog-Upload-Command':'start','X-Goog-Upload-Header-Content-Length':String(file.size),'X-Goog-Upload-Header-Content-Type':file.type||'video/mp4','Content-Type':'application/json'},body:JSON.stringify({file:{display_name:file.name}})});
- if(!start.ok)throw new Error('Googleへのアップロード開始に失敗しました（'+start.status+'）。APIキー・無料枠・通信を確認してください。');
- const uploadUrl=start.headers.get('x-goog-upload-url')||start.headers.get('X-Goog-Upload-URL');if(!uploadUrl)throw new Error('GoogleからアップロードURLを取得できませんでした。ブラウザの通信制限の可能性があります。');
- const uploaded=await fetch(uploadUrl,{method:'POST',headers:{'X-Goog-Upload-Offset':'0','X-Goog-Upload-Command':'upload, finalize','Content-Length':String(file.size)},body:file});
- if(!uploaded.ok)throw new Error('動画アップロードに失敗しました（'+uploaded.status+'）。無料枠の動画サイズ上限は2GBです。');
- const uploadedData=await uploaded.json();return uploadedData.file||uploadedData;
-}
-async function waitGeminiFileActive(file,key){let current=file;for(let i=0;i<60;i++){if(current.state==='ACTIVE')return current;if(current.state==='FAILED')throw new Error('Google側で動画の処理に失敗しました。');await new Promise(r=>setTimeout(r,3000));const name=current.name;if(!name)break;const res=await fetch('https://generativelanguage.googleapis.com/v1beta/'+name,{headers:{'x-goog-api-key':key}});if(!res.ok)throw new Error('動画の処理状態を確認できません（'+res.status+'）。');current=await res.json()}throw new Error('動画処理が時間内に完了しませんでした。動画を短くして再試行してください。')}
-async function runGeminiVideoAnalysis(){
- const file=document.getElementById('analysisVideoFile')?.files?.[0],key=(document.getElementById('geminiApiKey')?.value||'').trim(),btn=document.getElementById('geminiAnalyzeBtn');
- if(!file){toast('先に試合動画を選択してください');return}if(!key){toast('Gemini APIキーを入力してください');return}if(file.size>2*1024*1024*1024){toast('無料枠の動画上限2GBを超えています');return}
- btn.disabled=true;let remoteFile=null;
- try{
-  geminiStatus('1/3 Googleへ動画をアップロードしています…');
-  remoteFile=await geminiUploadVideo(file,key);
-  geminiStatus('2/3 Google側で動画を処理しています…');
-  remoteFile=await waitGeminiFileActive(remoteFile,key);
-  geminiStatus('3/3 '+GEMINI_FREE_MODEL+'（無料枠モデル）で試合映像を分析しています…');
-  const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+GEMINI_FREE_MODEL+':generateContent',{method:'POST',headers:{'x-goog-api-key':key,'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{file_data:{mime_type:remoteFile.mimeType||file.type||'video/mp4',file_uri:remoteFile.uri}},{text:geminiPrompt()}]}],generationConfig:{responseMimeType:'application/json',temperature:0.2}})});
-  if(!response.ok){let detail='';try{detail=(await response.json()).error?.message||''}catch(e){}if(response.status===429)throw new Error('無料枠の利用上限に達した可能性があります。有料モデルへの切替は行いません。時間をおいて再試行してください。');throw new Error('Gemini分析に失敗しました（'+response.status+'）。'+detail)}
-  const data=await response.json(),raw=(data.candidates?.[0]?.content?.parts||[]).map(x=>x.text||'').join('\n');
-  if(!raw)throw new Error('Geminiから分析結果が返りませんでした。');
-  geminiVideoResult={createdAt:new Date().toISOString(),fileName:file.name,model:GEMINI_FREE_MODEL,result:geminiJsonFromText(raw)};
-  localStorage.setItem('u15_gemini_video_analysis_v1',JSON.stringify(geminiVideoResult));
-  renderGeminiResult();renderReport();geminiStatus('分析完了。AI評価と得点情報を下の分析レポートへ反映しました。');toast('Gemini動画分析が完了しました');
- }catch(e){console.error(e);geminiStatus('分析停止：'+(e.message||e));toast('動画AI分析に失敗しました')}
- finally{if(remoteFile?.name){try{await fetch('https://generativelanguage.googleapis.com/v1beta/'+remoteFile.name,{method:'DELETE',headers:{'x-goog-api-key':key}})}catch(e){}}btn.disabled=false}
-}
-function clearGeminiResult(){if(!confirm('保存済みのGemini動画分析結果を消去しますか？'))return;geminiVideoResult=null;localStorage.removeItem('u15_gemini_video_analysis_v1');renderGeminiResult();renderReport();geminiStatus('保存済みのAI分析結果を消去しました。')}
-function geminiTime(t){if(!Number.isFinite(Number(t)))return '時刻不明';return stamp(Number(t))}
-function renderGeminiResult(){const el=document.getElementById('geminiResultView');if(!el)return;if(!geminiVideoResult?.result){el.innerHTML='<div class="empty">Geminiによる動画分析結果はここに表示されます。</div>';return}const r=geminiVideoResult.result||{},arr=x=>Array.isArray(x)?x:[];let html='<p class="hint">分析日時：'+esc(new Date(geminiVideoResult.createdAt).toLocaleString('ja-JP'))+' ／ モデル：'+esc(geminiVideoResult.model)+' ／ 動画：'+esc(geminiVideoResult.fileName)+'</p><div class="report-section"><h3>AI総評</h3><p>'+esc(r.summary||'総評なし')+'</p></div>';
- html+='<div class="report-section"><h3>良かったプレー</h3>'+ (arr(r.strengths).length?arr(r.strengths).map(x=>'<div class="rec"><b>'+geminiTime(x.timestamp_seconds)+'</b><p>'+esc(x.observation||'')+'</p><p>'+esc(x.why_good||'')+'</p></div>').join(''):'<p>明確に確認できた良い場面はありません。</p>')+'</div>';
- html+='<div class="report-section"><h3>約束事の達成・未達成</h3>'+ (arr(r.promise_reviews).length?arr(r.promise_reviews).map(x=>'<div class="rec '+(x.status==='未達成'?'high':'')+'"><b>'+esc(x.rule||'約束事')+' ／ '+esc(x.status||'判定不能')+' ／ '+geminiTime(x.timestamp_seconds)+'</b><p>根拠：'+esc(x.evidence||'')+'</p><p>'+esc(x.comment||'')+'</p><p>改善：'+esc(x.improvement||'')+'</p></div>').join(''):'<p>約束事の評価結果はありません。映像内で確認できなかった可能性があります。</p>')+'</div>';
- html+='<div class="report-section"><h3>改善ポイント</h3>'+ (arr(r.improvements).length?arr(r.improvements).map(x=>'<div class="rec high"><b>'+geminiTime(x.timestamp_seconds)+' '+esc(x.promise_rule||'')+'</b><p>'+esc(x.observation||'')+'</p><p>原因候補：'+esc(x.cause||'')+'</p><p>改善案：'+esc(x.action||'')+'</p></div>').join(''):'<p>明確な改善ポイントは抽出されませんでした。</p>')+'</div>';
- const sb=r.scoreboard||{};html+='<div class="report-section"><h3>動画から読み取った得点</h3><p>スコアボード：'+(sb.visible?'確認':'確認できず')+' ／ 信頼度：'+esc(sb.confidence||'不明')+'</p>';
- if(sb.final&&Number.isFinite(Number(sb.final.own))&&Number.isFinite(Number(sb.final.opponent)))html+='<p><b>最終スコア候補：'+esc(state.ownName)+' '+Number(sb.final.own)+' - '+Number(sb.final.opponent)+' '+esc(state.oppName)+'</b></p>';
- if(arr(sb.quarters).length)html+='<table class="printtable"><tr><th>Q</th><th>'+esc(state.ownName)+'</th><th>'+esc(state.oppName)+'</th></tr>'+arr(sb.quarters).map(x=>'<tr><td>'+esc(x.quarter)+'Q</td><td>'+Number(x.own||0)+'</td><td>'+Number(x.opponent||0)+'</td></tr>').join('')+'</table>';
- if(arr(r.scoring_events).length)html+='<h4>映像から確認した得点場面</h4><table class="printtable"><tr><th>時刻</th><th>Q</th><th>チーム</th><th>点</th><th>信頼度</th></tr>'+arr(r.scoring_events).map(x=>'<tr><td>'+geminiTime(x.timestamp_seconds)+'</td><td>'+Number(x.quarter||0)+'Q</td><td>'+((x.team==='own')?esc(state.ownName):esc(state.oppName))+'</td><td>+'+Number(x.points||0)+'</td><td>'+esc(x.confidence||'不明')+'</td></tr>').join('')+'</table>';
- html+='<p>'+esc(sb.notes||'')+'</p><p class="hint">※AIの読み取り候補です。数字が不鮮明な場合は必ず動画と照合してください。</p>';
- if(arr(sb.quarters).length)html+='<div class="actions"><button class="primary" onclick="applyGeminiScores()">このQ別得点を試合レポートへ反映</button></div>';
- html+='</div>';
- if(arr(r.cautions).length)html+='<div class="report-section"><h3>分析上の注意</h3><ul>'+arr(r.cautions).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div>';
- el.innerHTML=html;
-}
-function applyGeminiScores(){const q=geminiVideoResult?.result?.scoreboard?.quarters;if(!Array.isArray(q)||!q.length){toast('反映できるQ別得点がありません');return}if(!confirm('AIが読み取ったQ別得点で、現在の試合のQ別得点を置き換えます。動画と照合しましたか？'))return;const own=[0,0,0,0,0],opp=[0,0,0,0,0];q.forEach(x=>{const i=Math.max(0,Math.min(4,Number(x.quarter)-1));own[i]=Math.max(0,Number(x.own)||0);opp[i]=Math.max(0,Number(x.opponent)||0)});snapshot();state.ownQ=own;state.oppQ=opp;persist();renderVideoScoreEvents();toast('AI読み取り得点を試合レポートへ反映しました')}
-function appendGeminiAIToReport(){const el=document.getElementById('reportContent');if(!el||!geminiVideoResult?.result)return;const r=geminiVideoResult.result,arr=x=>Array.isArray(x)?x:[],sb=r.scoreboard||{};let h='<div class="report-section"><h3>Gemini AI動画評価</h3><p>'+esc(r.summary||'')+'</p>';
- h+='<h4>約束事の達成状況</h4>'+(arr(r.promise_reviews).length?'<table class="printtable"><tr><th>約束事</th><th>判定</th><th>時刻</th><th>コメント</th></tr>'+arr(r.promise_reviews).map(x=>'<tr><td>'+esc(x.rule||'')+'</td><td>'+esc(x.status||'判定不能')+'</td><td>'+geminiTime(x.timestamp_seconds)+'</td><td>'+esc(x.comment||x.improvement||'')+'</td></tr>').join('')+'</table>':'<p>AI評価データなし</p>');
- h+='<h4>良かった点</h4><ul>'+arr(r.strengths).map(x=>'<li>'+geminiTime(x.timestamp_seconds)+' '+esc(x.observation||'')+' '+esc(x.why_good||'')+'</li>').join('')+'</ul><h4>改善ポイント</h4><ul>'+arr(r.improvements).map(x=>'<li>'+geminiTime(x.timestamp_seconds)+' '+esc(x.observation||'')+' 改善：'+esc(x.action||'')+'</li>').join('')+'</ul>';
- if(sb.final)h+='<p><b>動画AIの最終スコア候補：'+esc(state.ownName)+' '+Number(sb.final.own||0)+' - '+Number(sb.final.opponent||0)+' '+esc(state.oppName)+'</b>（信頼度 '+esc(sb.confidence||'不明')+'）</p>';
- if(arr(sb.quarters).length)h+='<table class="printtable"><tr><th>Q</th><th>自チーム</th><th>相手</th></tr>'+arr(sb.quarters).map(x=>'<tr><td>'+esc(x.quarter)+'Q</td><td>'+Number(x.own||0)+'</td><td>'+Number(x.opponent||0)+'</td></tr>').join('')+'</table>';
- h+='<p class="hint">AIによる動画認識結果です。判定不能・低信頼度の箇所は映像で再確認してください。</p></div>';el.insertAdjacentHTML('beforeend',h)}
-// 初回表示時に端末へ保存済みのGemini結果を復元
-renderGeminiResult();renderReport();
+['ownName','oppName'].forEach(id=>{
+ const el=document.getElementById(id);
+ if(el) el.addEventListener('input',syncTeamNames);
+});
+window.addEventListener('DOMContentLoaded',syncTeamNames);
+
 </script>
 <script>
 if('serviceWorker' in navigator && location.protocol!=='file:'){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
@@ -494,6 +549,8 @@ if('serviceWorker' in navigator && location.protocol!=='file:'){window.addEventL
 <script type="module">
 let autoPoseLandmarker=null, autoPoseRunning=false, autoPoseLastTime=-1, autoPoseFrames=0;
 let autoPoseTracks=new Map(), autoPoseNextId=1, autoPoseLastCenters=[];
+let shotHistories=new Map(), shotEvents=[], shotLastDetected=new Map();
+let savedShotReports=JSON.parse(localStorage.getItem("u15_shot_form_reports_v1")||"[]");
 const AUTO_POSE_MODEL='https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task';
 const AUTO_POSE_WASM='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.2/wasm';
 const AUTO_POSE_BUNDLE='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.2/vision_bundle.mjs';
@@ -503,43 +560,207 @@ function poseCenter(l){let ids=[11,12,23,24],pts=ids.map(i=>l[i]).filter(p=>p&&p
 function poseMeasurements(l){return{leftElbow:poseAngle(l[11],l[13],l[15]),rightElbow:poseAngle(l[12],l[14],l[16]),leftKnee:poseAngle(l[23],l[25],l[27]),rightKnee:poseAngle(l[24],l[26],l[28])}}
 function matchPoseTracks(poses){let candidates=[];for(let i=0;i<poses.length;i++){let c=poseCenter(poses[i]);let best=null,dist=.20;for(let [id,t] of autoPoseTracks){if(t.used)continue;let d=Math.hypot(c.x-t.cx,c.y-t.cy);if(d<dist){dist=d;best=id}}if(best===null)best=autoPoseNextId++;let t=autoPoseTracks.get(best)||{id:best,count:0,sums:{},samples:{},cx:c.x,cy:c.y};t.used=true;t.cx=c.x;t.cy=c.y;t.count++;let m=poseMeasurements(poses[i]);for(let k in m)if(m[k]!==null&&m[k]>0){t.sums[k]=(t.sums[k]||0)+m[k];t.samples[k]=(t.samples[k]||0)+1}autoPoseTracks.set(best,t);candidates.push({id:best,landmarks:poses[i],center:c,measurements:m})}for(let t of autoPoseTracks.values())t.used=false;return candidates}
 function drawAutoPose(items){let v=document.getElementById('analysisVideo'),c=document.getElementById('analysisOverlay');if(!v||!c)return;let rect=v.getBoundingClientRect(),wrap=document.getElementById('analysisVideoWrap').getBoundingClientRect();c.width=Math.max(1,Math.round(rect.width*devicePixelRatio));c.height=Math.max(1,Math.round(rect.height*devicePixelRatio));c.style.left=(rect.left-wrap.left)+'px';c.style.top=(rect.top-wrap.top)+'px';c.style.width=rect.width+'px';c.style.height=rect.height+'px';let x=c.getContext('2d');x.setTransform(c.width,0,0,c.height,0,0);x.clearRect(0,0,1,1);let palette=['#00e5ff','#ffcc00','#ff5c8a','#70ef8b','#b18cff','#ff914d','#6dd5ed','#f7a8ff','#d6ff63','#ffffff'];for(let item of items){let col=palette[(item.id-1)%palette.length],l=item.landmarks;x.strokeStyle=col;x.fillStyle=col;x.lineWidth=.004;for(let [a,b] of POSE_LINKS){if(l[a]?.visibility>.35&&l[b]?.visibility>.35){x.beginPath();x.moveTo(l[a].x,l[a].y);x.lineTo(l[b].x,l[b].y);x.stroke()}}for(let idx of [11,12,13,14,15,16,23,24,25,26,27,28])if(l[idx]?.visibility>.35){x.beginPath();x.arc(l[idx].x,l[idx].y,.006,0,Math.PI*2);x.fill()}x.font='bold 0.025px sans-serif';x.lineWidth=.002;x.strokeStyle='#111';x.strokeText('ID '+item.id,item.center.x,item.center.y-.035);x.fillText('ID '+item.id,item.center.x,item.center.y-.035)}}
-
-function formCommentForTrack(t){
- const avg=k=>t.samples[k]?t.sums[k]/t.samples[k]:null;
- const elbows=[avg('leftElbow'),avg('rightElbow')].filter(v=>v!==null);
- const knees=[avg('leftKnee'),avg('rightKnee')].filter(v=>v!==null);
- if(t.count<12)return{good:['骨格を検出しました'],improve:['検出回数が少ないため評価は保留です。全身が映る位置から撮影し直してください。']};
- const improve=[],good=[];
- if(!elbows.length)improve.push('肘の位置を十分に検出できず、腕の評価は判定不能です。');
- else{const e=elbows.reduce((a,b)=>a+b,0)/elbows.length;if(e<135)improve.push('肘が十分に伸びきらない傾向があります。ボールを押し出す方向とリリース後の腕の伸びを確認しましょう。');else if(e>178)improve.push('肘が伸び切った状態で検出される傾向です。肩や手首に力みがないかコマ送りで確認しましょう。');else improve.push('腕の伸展は大きく崩れていない傾向です。肘から手首までの向きが毎回そろうか確認しましょう。');good.push('肘・腕の骨格点を検出できています');}
- if(!knees.length)improve.push('膝の位置を十分に検出できず、下半身の評価は判定不能です。');
- else{const k=knees.reduce((a,b)=>a+b,0)/knees.length;if(k>165)improve.push('膝の曲げが小さい姿勢が多い可能性があります。キャッチからリリースまで下半身を使えているか確認しましょう。');else if(k<105)improve.push('膝を深く曲げた姿勢が多く検出されています。毎回同じ深さから跳び上がれているか確認しましょう。');else improve.push('膝の曲げ伸ばしは一定範囲で検出されています。ジャンプと腕の動きが連動するか確認しましょう。');good.push('下半身の骨格点を検出できています');}
- return{good:good.length?good:['姿勢データを取得しました'],improve};
-}
-function generateFormEvaluationReport(){
- const el=document.getElementById('formEvaluationContent');if(!el)return;
- const rows=[...autoPoseTracks.values()].sort((a,b)=>a.id-b.id);
- if(!rows.length){el.innerHTML='<div class="empty">先に動画を選択し、AI検出を実行してください。</div>';return}
- el.innerHTML=rows.map(t=>{const r=formCommentForTrack(t);return '<div class="card"><h3>選手 ID '+t.id+'</h3><p class="hint">検出フレーム：'+t.count+'回</p><h4>良かった点</h4><ul>'+r.good.map(x=>'<li>'+x+'</li>').join('')+'</ul><h4>改善ポイント</h4><ul>'+r.improve.map(x=>'<li>'+x+'</li>').join('')+'</ul><p class="hint">※動画全体の姿勢傾向に基づく参考コメントです。リリース瞬間や成功率を直接判定した結果ではありません。</p></div>'}).join('');
-}
-function formEvaluationText(){return [...autoPoseTracks.values()].sort((a,b)=>a.id-b.id).map(t=>{const r=formCommentForTrack(t);return '選手 ID '+t.id+'（検出 '+t.count+'回）\n良かった点\n・'+r.good.join('\n・')+'\n改善ポイント\n・'+r.improve.join('\n・')}).join('\n\n')}
-function exportFormEvaluationReport(){const s=formEvaluationText();if(!s){toast('先にAI動画分析を実行してください');return}download('U15_AIフォーム評価レポート.txt',s,'text/plain;charset=utf-8')}
-function printFormEvaluationReport(){
- generateFormEvaluationReport();if(!autoPoseTracks.size){toast('評価できるAI検出データがありません');return}
- const w=window.open('','_blank');if(!w){toast('ポップアップを許可してください');return}
- w.document.write('<html lang="ja"><meta charset="utf-8"><title>U15 AIフォーム評価レポート</title><style>body{font-family:sans-serif;padding:24px;line-height:1.7}.card{border:1px solid #bbb;border-radius:8px;padding:14px;margin:14px 0}.hint{color:#555;font-size:12px}</style><h2>U15 AIフォーム評価レポート</h2><p>作成日：'+new Date().toLocaleString('ja-JP')+'</p>'+document.getElementById('formEvaluationContent').innerHTML+'<p class="hint">姿勢推定＋評価ルールによる参考コメントです。リリース直前の動作や成功率を直接判定したものではありません。</p><script>window.onload=function(){window.print()}<\\/script></html>');
- w.document.close();
-}
-
 function renderAutoPosePlayers(){let el=document.getElementById('autoPosePlayers');if(!el)return;let rows=[...autoPoseTracks.values()].sort((a,b)=>a.id-b.id);if(!rows.length){el.innerHTML='<div class="empty">まだ検出データがありません</div>';return}let avg=(t,k)=>t.samples[k]?Math.round(t.sums[k]/t.samples[k])+'°':'—';el.innerHTML='<table><tr><th>選手ID</th><th>検出回数</th><th>左肘平均</th><th>右肘平均</th><th>左膝平均</th><th>右膝平均</th></tr>'+rows.map(t=>`<tr><td><b>ID ${t.id}</b></td><td>${t.count}</td><td>${avg(t,'leftElbow')}</td><td>${avg(t,'rightElbow')}</td><td>${avg(t,'leftKnee')}</td><td>${avg(t,'rightKnee')}</td></tr>`).join('')+'</table>'}
 async function initAutoPose(){let status=document.getElementById('aiStatus'),btn=document.getElementById('aiInitBtn');try{btn.disabled=true;status.textContent='AIライブラリを読み込んでいます…（通信環境により数十秒かかります）';let mod=await import(AUTO_POSE_BUNDLE);status.textContent='骨格モデルを読み込んでいます…';let vision=await mod.FilesetResolver.forVisionTasks(AUTO_POSE_WASM);autoPoseLandmarker=await mod.PoseLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:AUTO_POSE_MODEL,delegate:'CPU'},runningMode:'VIDEO',numPoses:Number(document.getElementById('aiMaxPeople').value),minPoseDetectionConfidence:.45,minPosePresenceConfidence:.45,minTrackingConfidence:.45});status.textContent='AI準備完了。動画の自動分析を開始できます。';document.getElementById('aiStartBtn').disabled=false;toast('複数人AI検出の準備ができました')}catch(e){console.error(e);status.textContent='AI準備に失敗しました。インターネット接続を確認して再試行してください。詳細: '+(e.message||e);btn.disabled=false;toast('AIモデルを読み込めませんでした')}}
 function startAutoPose(){let v=document.getElementById('analysisVideo');if(!autoPoseLandmarker){toast('先にAI検出を準備してください');return}if(!v||!v.src||!v.videoWidth){toast('先に分析する動画を選択してください');return}autoPoseRunning=true;document.getElementById('aiStartBtn').disabled=true;document.getElementById('aiStopBtn').disabled=false;document.getElementById('aiStatus').textContent='動画を再生すると、複数選手の骨格を自動検出します。';if(v.paused)v.play().catch(()=>{});requestAnimationFrame(autoPoseLoop)}
 function stopAutoPose(){autoPoseRunning=false;document.getElementById('aiStartBtn').disabled=!autoPoseLandmarker;document.getElementById('aiStopBtn').disabled=true;document.getElementById('aiStatus').textContent='AI分析を停止しました。集計結果は保持されています。';renderAutoPosePlayers()}
-function autoPoseLoop(){if(!autoPoseRunning)return;let v=document.getElementById('analysisVideo');if(!v||v.paused||v.ended||v.readyState<2){if(v?.ended)stopAutoPose();else requestAnimationFrame(autoPoseLoop);return}if(v.currentTime!==autoPoseLastTime){autoPoseLastTime=v.currentTime;try{let result=autoPoseLandmarker.detectForVideo(v,Math.max(0,Math.round(v.currentTime*1000)));let poses=result.landmarks||[];let items=matchPoseTracks(poses);drawAutoPose(items);autoPoseFrames++;document.getElementById('aiDetectedCount').textContent=poses.length;document.getElementById('aiFrameCount').textContent=autoPoseFrames;document.getElementById('aiTrackCount').textContent=autoPoseTracks.size;if(autoPoseFrames%8===0)renderAutoPosePlayers()}catch(e){console.warn(e);document.getElementById('aiStatus').textContent='フレーム解析エラー: '+e.message}}requestAnimationFrame(autoPoseLoop)}
+
+function midPoint(a,b){return{x:(a.x+b.x)/2,y:(a.y+b.y)/2}}
+function shotMetrics(l,side){let right=side==='right',sh=l[right?12:11],el=l[right?14:13],wr=l[right?16:15],hip=l[right?24:23],knee=l[right?26:25],ankle=l[right?28:27],index=l[right?20:19];let shoulderAngle=poseAngle(hip,sh,el),elbow=poseAngle(sh,el,wr),wrist=index?poseAngle(el,wr,index):null,kneeAngle=poseAngle(hip,knee,ankle);let sm=midPoint(l[11],l[12]),hm=midPoint(l[23],l[24]);let trunkTilt=Math.round(Math.atan2(Math.abs(sm.x-hm.x),Math.abs(sm.y-hm.y))*180/Math.PI);return{shoulder:shoulderAngle,elbow,wrist,knee:kneeAngle,trunk:trunkTilt}}
+function formComments(m){let good=[],improve=[];if(m.elbow!==null){if(m.elbow>=150)good.push('肘が伸びた位置でリリースできています。');else if(m.elbow<130)improve.push('リリース時に肘が十分に伸びているか確認。ボールを前上方へ押し出す意識を持ちましょう。');else improve.push('肘の伸びが途中です。無理に固定せず、自然に伸び切る動きを確認しましょう。')}
+if(m.shoulder!==null){if(m.shoulder>=70&&m.shoulder<=150)good.push('肩から腕への振り上げが確認できます。');else improve.push('肩の振り上げ角度を確認。肩だけで無理に上げず、体幹と脚から連動させましょう。')}
+if(m.wrist!==null){if(m.wrist>=140)good.push('手首から指先へのフォロースルーが見えています。');else improve.push('手首・指先の抜けを確認。リリース後に手首を自然に前下方へ返す練習をしましょう。')}
+if(m.knee!==null){if(m.knee>=145)good.push('リリース付近で膝が伸びる動きが見られます。');else improve.push('膝の伸展が残っている可能性があります。膝を曲げてため、脚の伸びと腕の動きをつなげましょう。')}
+if(m.trunk!==null){if(m.trunk<=15)good.push('体幹の左右の傾きは小さく、軸が保たれています。');else improve.push('体幹が左右に傾いています。両足の幅と踏み切り方向を整え、真上に伸びる意識を持ちましょう。')}
+if(!good.length)good.push('骨格の一部が十分に検出できず、良い点は判定保留です。');if(!improve.length)improve.push('今回の骨格指標では大きな修正点は見つかりません。複数方向の映像とシュート結果も確認しましょう。');return{good,improve}}
+function captureShotFrame(video,l,id,side,time){let scale=Math.min(1,960/video.videoWidth),w=Math.max(1,Math.round(video.videoWidth*scale)),h=Math.max(1,Math.round(video.videoHeight*scale));let c=document.createElement('canvas');c.width=w;c.height=h;let x=c.getContext('2d');x.drawImage(video,0,0,w,h);x.strokeStyle='#00e5ff';x.fillStyle='#00e5ff';x.lineWidth=Math.max(2,w*.003);for(let [a,b] of POSE_LINKS){if(l[a]?.visibility>.35&&l[b]?.visibility>.35){x.beginPath();x.moveTo(l[a].x*w,l[a].y*h);x.lineTo(l[b].x*w,l[b].y*h);x.stroke()}}for(let i of [11,12,13,14,15,16,23,24,25,26,27,28])if(l[i]?.visibility>.35){x.beginPath();x.arc(l[i].x*w,l[i].y*h,Math.max(3,w*.006),0,Math.PI*2);x.fill()}x.font=`bold ${Math.max(14,w*.025)}px sans-serif`;x.fillText(`ID ${id} / 推定リリース直前 ${time.toFixed(2)}s / ${side}`,12,28);return c.toDataURL('image/jpeg',.72)}
+function detectShotEvents(items,v){for(let item of items){let l=item.landmarks,id=item.id,selected=document.getElementById('shotPlayer')?.value||'all';if(selected!=='all'&&String(id)!==selected)continue;let hand=document.getElementById('shotHand')?.value||'auto';let sides=hand==='auto'?['right','left']:[hand];for(let side of sides){let wrist=l[side==='right'?16:15],elbow=poseAngle(l[side==='right'?12:11],l[side==='right'?14:13],wrist);if(!wrist||wrist.visibility<.45||elbow===null)continue;let key=id+'-'+side,h=shotHistories.get(key)||[];let sample={time:v.currentTime,y:wrist.y,elbow,landmarks:l,side};if(!h.length||wrist.y<Math.min(...h.slice(-6).map(z=>z.y))-.002)sample.image=captureShotFrame(v,l,id,side,v.currentTime);h.push(sample);if(h.length>16)h.shift();shotHistories.set(key,h);if(h.length<7)continue;let recent=h.slice(-7),peak=recent.reduce((a,b)=>b.y<a.y?b:a,recent[0]),first=recent[0],last=recent[recent.length-1];let rise=first.y-peak.y,fall=last.y-peak.y,already=shotLastDetected.get(key)||-10;if(peak===recent[recent.length-1]||peak.elbow<135||rise<.035||fall<.018||v.currentTime-already<1.1)continue;let metrics=shotMetrics(peak.landmarks,side),comments=formComments(metrics),image=peak.image||captureShotFrame(v,peak.landmarks,id,side,peak.time);let ev={id,side,time:peak.time,metrics,comments,image,rise:Number(rise.toFixed(3)),fall:Number(fall.toFixed(3)),peakElbow:peak.elbow,created:new Date().toISOString(),confirmed:false};shotEvents.unshift(ev);if(shotEvents.length>40)shotEvents.pop();shotLastDetected.set(key,v.currentTime);renderShotEvents();let st=document.getElementById('shotDetectStatus');if(st)st.textContent=`シュート動作を検出：ID ${id}／${side==='right'?'右手':'左手'}／${peak.time.toFixed(2)}秒（映像で確認してください）`;}}}
+function renderShotEvents(){let el=document.getElementById('shotEvents');if(!el)return;if(!shotEvents.length){el.innerHTML='<div class="empty">シュート動作はまだ検出されていません</div>';return}el.innerHTML=shotEvents.map((e,i)=>`<div class="card" style="margin:8px 0"><b>ID ${e.id}・${e.side==='right'?'右手':'左手'}・${e.time.toFixed(2)}秒</b><p class="hint">推定リリース直前の骨格画像（動画上の推定時刻）</p><p class="hint">手首の上昇量：${e.rise??"—"}（画面比）／頂点後の下降量：${e.fall??"—"}（画面比）／頂点時の肘：${e.peakElbow??"—"}°</p><img src="${e.image}" alt="推定リリース骨格" style="width:100%;max-width:520px;border-radius:8px"><p>肩 ${e.metrics.shoulder??'—'}°／肘 ${e.metrics.elbow??'—'}°／手首 ${e.metrics.wrist??'—'}°／膝 ${e.metrics.knee??'—'}°／体幹傾き ${e.metrics.trunk??'—'}°</p><b>良いところ</b><ul>${e.comments.good.map(x=>`<li>${x}</li>`).join('')}</ul><b>改善点</b><ul>${e.comments.improve.map(x=>`<li>${x}</li>`).join('')}</ul><button onclick="saveShotReport(${i})">この選手のレポートを保存</button><button onclick="seekShot(${e.time})">動画の該当位置へ</button></div>`).join('')}
+function seekShot(t){let v=document.getElementById('analysisVideo');v.currentTime=t;v.pause()}
+function saveShotReport(i){let e=shotEvents[i];if(!e)return;let name=document.getElementById('shotPlayerName')?.value.trim()||`選手ID ${e.id}`;let report={...e,playerName:name,team:document.getElementById('ownName')?.value||'自チーム',savedAt:new Date().toISOString()};savedShotReports.unshift(report);localStorage.setItem('u15_shot_form_reports_v1',JSON.stringify(savedShotReports));renderSavedShotReports();toast('選手別フォームレポートを保存しました')}
+function renderSavedShotReports(){let el=document.getElementById('shotReports');if(!el)return;if(!savedShotReports.length){el.innerHTML='<div class="empty">保存したレポートはありません</div>';return}el.innerHTML=savedShotReports.map((r,i)=>`<div class="card" style="margin:6px 0"><b>${r.playerName}</b>／ID ${r.id}／${Number(r.time).toFixed(2)}秒 <span class="hint">${new Date(r.savedAt).toLocaleString()}</span><p>${r.comments.good.join(' ')}</p><p>${r.comments.improve.join(' ')}</p><button onclick="downloadShotReport(${i})">このレポートを保存</button></div>`).join('')}
+function downloadShotReport(i){let r=savedShotReports[i];if(!r)return;download(`U15_フォーム評価_ID${r.id}_${Math.round(r.time*100)}.json`,JSON.stringify(r,null,2),'application/json')}
+function exportShotReports(){download('U15_player_shot_form_reports.json',JSON.stringify(savedShotReports,null,2),'application/json')}
+function clearShotReports(){if(!confirm('保存したフォームレポートをすべて削除しますか？'))return;savedShotReports=[];localStorage.removeItem('u15_shot_form_reports_v1');renderSavedShotReports()}
+window.saveShotReport=saveShotReport;window.seekShot=seekShot;window.downloadShotReport=downloadShotReport;window.exportShotReports=exportShotReports;window.clearShotReports=clearShotReports;
+
+
+let latestPlayReview=[];
+function generatePlayReview(){
+ const checks=[
+  {key:'shoulder',name:'肩の使い方',good:v=>v>=70&&v<=150,goodTitle:'肩から腕への振り上げが安定',goodText:'肩から腕への振り上げ角度が観察目安の範囲です。',badTitle:'肩の振り上げを確認',badText:'肩だけで無理に上げず、脚・体幹から腕へ連動しているか映像で確認しましょう。'},
+  {key:'elbow',name:'肘の伸展',good:v=>v>=150,goodTitle:'肘が伸びたリリース姿勢',goodText:'推定リリース付近で肘の伸展が確認できます。',badTitle:'肘の伸展を改善候補に',badText:'推定リリース付近で肘の伸びが不足している可能性があります。自然に前上方へ伸ばす動きを確認しましょう。'},
+  {key:'wrist',name:'手首・指先',good:v=>v>=140,goodTitle:'手首・指先のフォロースルー',goodText:'手首から指先への伸びが観察されています。',badTitle:'手首・指先の抜けを確認',badText:'手首・指先のフォロースルーを映像で確認し、自然に最後まで使えるか練習しましょう。'},
+  {key:'knee',name:'膝の伸展',good:v=>v>=145,goodTitle:'下半身の伸びが見られる',goodText:'推定リリース付近で膝が伸びる動きが確認できます。',badTitle:'膝と腕の連動を確認',badText:'膝の伸展が十分でない可能性があります。膝でためてから腕へ力をつなげる動きを確認しましょう。'},
+  {key:'trunk',name:'体幹の軸',good:v=>v<=15,goodTitle:'体幹の軸が安定',goodText:'左右方向の体幹傾きが小さく、軸が保たれています。',badTitle:'体幹の傾きを改善候補に',badText:'左右方向の体幹傾きが大きめです。踏み切り方向と着地位置を映像で確認しましょう。'}
+ ];
+ let findings=[];
+ for(const e of shotEvents.slice().sort((a,b)=>a.time-b.time)){
+  for(const c of checks){
+   const value=e.metrics?.[c.key];
+   if(value===null||value===undefined||!Number.isFinite(Number(value)))continue;
+   const good=c.good(Number(value));
+   findings.push({
+    kind:good?'good':'improve',
+    title:good?c.goodTitle:c.badTitle,
+    category:c.name,
+    playerId:e.id,
+    time:Number(e.time.toFixed(2)),
+    value:Number(value),
+    unit:'°',
+    detail:(good?c.goodText:c.badText),
+    evidence:`ID ${e.id}・${e.time.toFixed(2)}秒・${c.name} ${value}°`
+   });
+  }
+ }
+ latestPlayReview=findings.slice(0,10);
+ const status=document.getElementById('playReviewStatus');
+ const list=document.getElementById('playReviewList');
+ if(!findings.length){
+  status.textContent='分析できるシュート動作がありません。動画を選び、AI検出を準備してから動画を再生してください。';
+  list.innerHTML='<div class="empty">骨格が十分に検出されたシュート動作がまだありません。</div>';
+  return;
+ }
+ const goodCount=latestPlayReview.filter(x=>x.kind==='good').length;
+ const improveCount=latestPlayReview.filter(x=>x.kind==='improve').length;
+ status.textContent=`検出データから${latestPlayReview.length}項目を抽出（良い動き ${goodCount}件／改善候補 ${improveCount}件）。${findings.length<10?'10項目に満たないため、検出できた分のみ表示しています。':'最大10項目を表示しています。'}`;
+ list.innerHTML=latestPlayReview.map((x,i)=>`<div class="rec ${x.kind==='improve'?'high':''}"><h3>${i+1}. ${x.kind==='good'?'良い動き':'改善候補'}：${x.title}</h3><p><b>${x.evidence}</b><br>${x.detail}</p></div>`).join('');
+}
+function exportPlayReview(){
+ if(!latestPlayReview.length){toast('先にプレー分析を実行してください');return}
+ download('U15_試合動画AIプレー分析10項目.json',JSON.stringify({createdAt:new Date().toISOString(),method:'骨格検出されたシュート動作の関節角度に基づく観察候補。得点・パス・リバウンド・守備の成否は判定しない。',items:latestPlayReview},null,2),'application/json');
+}
+window.generatePlayReview=generatePlayReview;
+window.exportPlayReview=exportPlayReview;
+
+function autoPoseLoop(){if(!autoPoseRunning)return;let v=document.getElementById('analysisVideo');if(!v||v.paused||v.ended||v.readyState<2){if(v?.ended)stopAutoPose();else requestAnimationFrame(autoPoseLoop);return}if(v.currentTime!==autoPoseLastTime){autoPoseLastTime=v.currentTime;try{let result=autoPoseLandmarker.detectForVideo(v,Math.max(0,Math.round(v.currentTime*1000)));let poses=result.landmarks||[];let items=matchPoseTracks(poses);drawAutoPose(items);detectShotEvents(items,v);autoPoseFrames++;document.getElementById('aiDetectedCount').textContent=poses.length;document.getElementById('aiFrameCount').textContent=autoPoseFrames;document.getElementById('aiTrackCount').textContent=autoPoseTracks.size;if(autoPoseFrames%8===0){renderAutoPosePlayers();let sel=document.getElementById('shotPlayer');if(sel){let val=sel.value;sel.innerHTML='<option value="all">全選手を検出</option>'+[...autoPoseTracks.keys()].sort((a,b)=>a-b).map(id=>`<option value="${id}">ID ${id}</option>`).join('');sel.value=val}}}catch(e){console.warn(e);document.getElementById('aiStatus').textContent='フレーム解析エラー: '+e.message}}requestAnimationFrame(autoPoseLoop)}
 function exportAutoPoseCSV(){let rows=[['選手ID','検出回数','左肘平均角度','右肘平均角度','左膝平均角度','右膝平均角度'],...[...autoPoseTracks.values()].sort((a,b)=>a.id-b.id).map(t=>[t.id,t.count,...['leftElbow','rightElbow','leftKnee','rightKnee'].map(k=>t.samples[k]?Math.round(t.sums[k]/t.samples[k]):'')])];download('U15_AI_pose_analysis.csv','\ufeff'+rows.map(r=>r.map(csv).join(',')).join('\n'),'text/csv;charset=utf-8')}
 function clearAutoPoseLog(){if(!confirm('AI分析の集計記録を消去しますか？'))return;autoPoseTracks.clear();autoPoseNextId=1;autoPoseFrames=0;document.getElementById('aiFrameCount').textContent='0';document.getElementById('aiTrackCount').textContent='0';document.getElementById('aiDetectedCount').textContent='0';renderAutoPosePlayers()}
-window.initAutoPose=initAutoPose;window.startAutoPose=startAutoPose;window.stopAutoPose=stopAutoPose;window.exportAutoPoseCSV=exportAutoPoseCSV;window.clearAutoPoseLog=clearAutoPoseLog;window.generateFormEvaluationReport=generateFormEvaluationReport;window.printFormEvaluationReport=printFormEvaluationReport;window.exportFormEvaluationReport=exportFormEvaluationReport;
-const aiFile=document.getElementById('analysisVideoFile');if(aiFile)aiFile.addEventListener('change',()=>{stopAutoPose();autoPoseLastTime=-1;autoPoseTracks.clear();autoPoseNextId=1;autoPoseFrames=0;renderAutoPosePlayers();document.getElementById('aiFrameCount').textContent='0';document.getElementById('aiTrackCount').textContent='0';document.getElementById('aiDetectedCount').textContent='0'});
+window.initAutoPose=initAutoPose;window.startAutoPose=startAutoPose;window.stopAutoPose=stopAutoPose;window.exportAutoPoseCSV=exportAutoPoseCSV;window.clearAutoPoseLog=clearAutoPoseLog;
+const aiFile=document.getElementById('analysisVideoFile');if(aiFile)aiFile.addEventListener('change',()=>{stopAutoPose();autoPoseLastTime=-1;autoPoseTracks.clear();autoPoseNextId=1;autoPoseFrames=0;shotHistories.clear();shotEvents=[];shotLastDetected.clear();latestPlayReview=[];document.getElementById('playReviewStatus').textContent='新しい動画を選択しました。AI検出後に分析してください。';document.getElementById('playReviewList').innerHTML='<div class="empty">分析結果はまだありません</div>';renderAutoPosePlayers();renderShotEvents();document.getElementById('aiFrameCount').textContent='0';document.getElementById('aiTrackCount').textContent='0';document.getElementById('aiDetectedCount').textContent='0'});
+renderSavedShotReports();renderShotEvents();
+
+// --- Dedicated timestamped tactical review tab ---
+let tacticalScenes=[];
+try{tacticalScenes=JSON.parse(localStorage.getItem('u15_tactical_scenes_v1'))||[]}catch(e){tacticalScenes=[]}
+function formatVideoClock(seconds){
+ seconds=Math.max(0,Number(seconds)||0);
+ const m=Math.floor(seconds/60),s=Math.floor(seconds%60);
+ return `${m}:${String(s).padStart(2,'0')}`;
+}
+function openVideoAnalysisTab(){document.querySelector('[data-tab="videoAnalysis"]')?.click()}
+function captureTacticalTime(){
+ const v=document.getElementById('analysisVideo');
+ if(!v||!v.src||!Number.isFinite(v.currentTime)){toast('先に「動画分析」タブで動画を選択してください');return}
+ document.getElementById('tacticalCurrentTime').textContent=formatVideoClock(v.currentTime);
+ document.getElementById('tacticalScene').focus();
+}
+
+function buildTacticalIQ(){
+ const val=id=>document.getElementById(id)?.value||'';
+ const offense=val('tacticalOffenseIntent'), defense=val('tacticalDefenseRead'), pressure=val('tacticalPressure'), screen=val('tacticalScreen'), outcome=val('tacticalOutcome'); const rule='na';
+ const offenseNames={drive:'ドライブ',pass:'パス展開',screen:'スクリーン活用',shoot:'シュート機会づくり',cut:'カット／バックドア',transition:'速攻',other:'攻撃の意図'};
+ let reasons=[],actions=[],verdict='状況確認';
+ if(defense==='ahead'){reasons.push('守備側は攻撃の選択肢を予測し、ボールが動く前に先回りできている。相手の得意な展開を限定できた点が評価できる。');actions.push('予測の根拠（相手の利き手、配置、直前のパターン）をチームで共有し、次のパス先まで連動する。');}
+ if(defense==='late'){reasons.push('守備側は攻撃の動きが始まってから追いかけており、先手を取られている。ボールだけを見て周囲の配置や次の選択肢を読む準備が遅れた可能性がある。');actions.push('ボール保持者だけでなく、味方・ヘルプ位置・次のパス先を同時に確認し、動き出す前に進行方向を限定する。');}
+ if(defense==='contain'){reasons.push('守備側は正面から奪いに行くより、進行方向を限定してペイント侵入を抑える判断をしている。');actions.push('中央を簡単に割らせず、サイドへ誘導した後のヘルプ位置とリバウンド担当まで確認する。');}
+ if(defense==='help'){reasons.push('ヘルプに出る判断が選択されている。成功の鍵は、ボールマンへの寄せと自分のマークマンを誰が引き継ぐかの予告・共有にある。');actions.push('ヘルプに出る選手は声で知らせ、隣の選手がローテーションしてパス先を埋める。ヘルプ後の戻り先も明確にする。');}
+ if(defense==='rotate'){reasons.push('ローテーションで次の攻撃者を埋める局面。全員がボールの移動と次のパス先を予測できたかが成否を分ける。');actions.push('ボールが空中にある間に次の相手へ移動し、最も危険なシュート機会を優先して消す。');}
+ if(pressure==='close'){reasons.push('密着する意図はシュートやキャッチを制限すること。ただし抜かれた場合のヘルプ位置が準備できているかが重要。');actions.push('相手のシュート力・ドライブ力に応じて距離を調整し、抜かれた瞬間のカバー担当を明確にする。');}
+ if(pressure==='gap'){reasons.push('距離を取る意図はドライブへの備えと考えられる。相手のシュート力が高い場合は、空けた距離から打たれるリスクとの比較が必要。');actions.push('相手の得意なプレーに合わせて間合いを決め、シュートを許容する距離とドライブを止める位置をチームで統一する。');}
+ if(pressure==='deny'){reasons.push('ディナイでパスコースを消す判断。ボールとマークマンの両方を視野に入れ、バックドアへの対応を準備できているかが重要。');actions.push('パスを消すだけでなく、背後を取られた場合のヘルプ位置を確認し、ボール側・ヘルプ側の役割を共有する。');}
+ if(pressure==='sag'){reasons.push('ヘルプを優先して距離を取る判断。ペイントを守る狙いと、相手に空いたシュートを打たせるリスクの釣り合いを確認する。');actions.push('誰を一時的に空けてよいかを相手のシュート力で決め、パスが出た瞬間にクローズアウトする。');}
+ if(screen==='fight'){reasons.push('ファイトオーバーはシューターやボールハンドラーへの圧力を維持する選択。スクリーンに接触して遅れた場合、ビッグマンのカバーと連携できたかが焦点。');actions.push('スクリーン前に声を出し、上を通る選手とカバー役の距離・角度を合わせる。');}
+ if(screen==='under'){reasons.push('アンダーは相手のシュート力やスクリーン位置を踏まえ、ドライブを優先して警戒する選択。相手にリズムよく打たせていないか確認する。');actions.push('相手の成功率・得意レンジに応じてアンダーの可否を決め、スクリーン後すぐにボールへ戻る。');}
+ if(screen==='switch'){reasons.push('スイッチはミスマッチを受け入れてでもボールへの圧力やドライブ阻止を優先する選択。受け渡しの声と次のカバーが成否を決める。');actions.push('スクリーン接触前に声で交換を宣言し、スイッチ後のミスマッチとリバウンド担当を全員で共有する。');}
+ if(screen==='show'){reasons.push('ショウ／ヘッジはボールを一時的に止めて味方が戻る時間を作る選択。出る深さと戻るタイミング、背後のロール対応が重要。');actions.push('ボールを止める時間を必要最小限にし、ロールマンを誰が受けるかを事前に決めておく。');}
+ if(rule==='yes'){reasons.push('チームの約束事どおりに遂行できたという評価。結果だけでなく、声・受け渡し・次のカバーまで連続して実行できたかを確認する。');}
+ if(rule==='no'){reasons.push('チームの約束事と異なる対応、または受け渡しのずれがあった。個人の反応だけでなく、事前の共有不足や役割の曖昧さが原因の可能性がある。');actions.push('守り方のコールを短い共通語で統一し、誰がボール・スクリーン・ロールマンを担当するかを練習で反復する。');}
+ if(outcome==='advantage'){reasons.push('攻撃側が数的・位置的優位を得ているため、守備の予測またはローテーションに遅れがあった可能性がある。');actions.push('ボールがペイントへ入る前にヘルプ位置を取り、パスが出た瞬間に次のローテーションを開始する。');}
+ if(outcome==='stop'){reasons.push('守備側が攻撃の選択肢を制限できた結果。どの予測・間合い・カバーが有効だったかを再現可能な形で共有する。');actions.push('成功した守り方を相手の配置別に整理し、同じ状況で全員が同じ判断を選べるようにする。');}
+ if(outcome==='score'){reasons.push('得点につながった結果だけでなく、得点前にどこで優位が生まれたか、守備側がどのタイミングで後手になったかを特定する必要がある。');actions.push('最初に崩れた地点を確認し、ヘルプ開始・ローテーション・クローズアウトのどこを修正するか決める。');}
+ if(outcome==='turnover'){reasons.push('ターンオーバーにつながった場面。守備側の予測・パスコース制限・プレッシャーのどれがボール保持者の判断を難しくしたかを確認する。');actions.push('成功したプレッシャーのきっかけを共有し、次も同じ誘導方向へ追い込めるようにする。');}
+ if(outcome==='reset'){reasons.push('攻撃側が優位を作れずやり直している。守備側が最初のアクションを遅らせ、次の選択肢を限定できた可能性がある。');actions.push('守備側は不用意に飛び込まず、時間とスペースを奪う守りを継続する。攻撃側は次のアクションへ素早く移る。');}
+ if(!reasons.length)reasons.push('選択された情報だけでは状況判断の質を十分に判定できない。ボール・オフボール・ヘルプ位置とプレー結果を追加確認する。');
+ if(!actions.length)actions.push('動画を前後数秒戻して、ボール保持者・マークマン・ヘルプ担当・次のパス先を確認し、チームの約束事と照合する。');
+ if(rule==='no'||defense==='late'||outcome==='advantage')verdict='改善が必要な判断・連携';
+ else if((defense==='ahead'||defense==='contain'||defense==='help'||defense==='rotate')&&(outcome==='stop'||outcome==='turnover'||rule==='yes'))verdict='良い守備判断・遂行';
+ else if(outcome==='score'&&offense!=='other')verdict='良い攻撃結果（成功要因を確認）';
+ else verdict='追加確認が必要';
+ return {offense:offenseNames[offense]||'不明',defense,pressure,screen,rule,outcome,verdict,reason:reasons.join(' '),action:[...new Set(actions)].join(' '),basis:'状況選択に基づく戦術ルール支援。映像全体の自動認識やJBA全プレーの網羅判定ではありません。'};
+}
+function saveTacticalScene(){
+ const v=document.getElementById('analysisVideo');
+ if(!v||!v.src){toast('先に動画分析タブで動画を選択してください');return}
+ const scene=document.getElementById('tacticalScene').value.trim();
+ const reason=document.getElementById('tacticalReason').value.trim();
+ const action=document.getElementById('tacticalAction').value.trim();
+ if(!scene){toast('場面・プレー内容を入力してください');return}
+ const sec=Number(v.currentTime)||0;
+ const iq=buildTacticalIQ();
+ const finalReason=reason||iq.reason;
+ const finalAction=action||iq.action;
+ tacticalScenes.unshift({
+  id:Date.now(),seconds:Number(sec.toFixed(2)),time:formatVideoClock(sec),
+  type:document.getElementById('tacticalType').value,
+  scene,reason:finalReason,action:finalAction,iq,createdAt:new Date().toISOString()
+ });
+ tacticalScenes=tacticalScenes.slice(0,100);
+ localStorage.setItem('u15_tactical_scenes_v1',JSON.stringify(tacticalScenes));
+ document.getElementById('tacticalScene').value='';
+ document.getElementById('tacticalReason').value='';
+ document.getElementById('tacticalAction').value='';
+ renderTacticalReview();
+ toast('動画の場面レビューを保存しました');
+}
+function renderTacticalReview(){
+ const list=document.getElementById('tacticalReviewList');
+ const status=document.getElementById('tacticalReviewStatus');
+ const count=document.getElementById('tacticalCount');
+ if(count)count.textContent=tacticalScenes.length;
+ if(!list||!status)return;
+ if(!tacticalScenes.length){status.textContent='まだ場面が登録されていません。';list.innerHTML='<div class="empty">動画を再生し、場面ごとに現在位置を取り込んで評価を保存してください。</div>';return}
+ const shown=tacticalScenes.slice(0,10);
+ status.textContent=`登録 ${tacticalScenes.length}件 ／ レポート表示 ${shown.length}件`;
+ list.innerHTML=shown.map((x,i)=>`<div class="card" style="margin:8px 0"><h3>${i+1}. ${x.time} — ${x.type==='good'?'良いプレー（オフェンス）':'改善が必要（ディフェンス）'}</h3><p><b>場面：</b>${esc(x.scene)}</p><p><b>詳細な理由：</b>${esc(x.reason)}</p><p><b>戦術判定：</b>${esc(x.iq?.verdict||"コーチ評価")}</p><p><b>状況判断の理由：</b>${esc(x.iq?.reason||x.reason)}</p><p><b>次のアクション：</b>${esc(x.iq?.action||x.action)}</p><div class="actions"><button onclick="jumpTacticalTime(${x.seconds})">動画の該当位置へ</button><button class="danger" onclick="deleteTacticalScene(${x.id})">削除</button></div></div>`).join('');
+}
+function jumpTacticalTime(t){
+ const v=document.getElementById('analysisVideo');
+ if(!v||!v.src){toast('動画分析タブで同じ動画を選択してください');return}
+ document.querySelector('[data-tab="videoAnalysis"]')?.click();
+ v.currentTime=Math.max(0,Math.min(v.duration||t,t));v.pause();
+}
+function deleteTacticalScene(id){
+ tacticalScenes=tacticalScenes.filter(x=>x.id!==id);
+ localStorage.setItem('u15_tactical_scenes_v1',JSON.stringify(tacticalScenes));
+ renderTacticalReview();
+}
+function exportTacticalReview(){
+ if(!tacticalScenes.length){toast('保存した場面がありません');return}
+ download('U15_オフェンス_ディフェンス戦術レビュー.json',JSON.stringify({
+  title:'U15 試合動画 戦術レビュー',createdAt:new Date().toISOString(),
+  note:'骨格角度・フォームは評価対象外。状況選択に基づく戦術ルール支援であり、映像全体の自動認識やJBA全プレーの網羅判定ではありません。',
+  items:tacticalScenes.slice(0,10)
+ },null,2),'application/json');
+}
+function exportTacticalCSV(){
+ if(!tacticalScenes.length){toast('保存した場面がありません');return}
+ const rows=[['時間','判定','場面','詳細な理由','次のアクション'],...tacticalScenes.slice(0,10).map(x=>[x.time,x.type==='good'?'良いプレー':'改善が必要',x.scene,x.reason,x.action])];
+ download('U15_戦術レビュー.csv','\ufeff'+rows.map(r=>r.map(csv).join(',')).join('\n'),'text/csv;charset=utf-8');
+}
+window.captureTacticalTime=captureTacticalTime;
+window.saveTacticalScene=saveTacticalScene;
+window.exportTacticalReview=exportTacticalReview;
+window.exportTacticalCSV=exportTacticalCSV;
+window.jumpTacticalTime=jumpTacticalTime;
+window.deleteTacticalScene=deleteTacticalScene;
+window.openVideoAnalysisTab=openVideoAnalysisTab;
+const tacticalVideo=document.getElementById('analysisVideo');
+if(tacticalVideo){
+ tacticalVideo.addEventListener('timeupdate',()=>{const el=document.getElementById('tacticalCurrentTime');if(el)el.textContent=formatVideoClock(tacticalVideo.currentTime)});
+}
+renderTacticalReview();
+
 </script>
 
 </body></html>
