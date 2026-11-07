@@ -1,0 +1,18 @@
+<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>U15 Scout オフライン更新ツール</title>
+<style>body{font-family:system-ui,sans-serif;max-width:760px;margin:24px auto;padding:16px;line-height:1.6;color:#182230}button,input{font:inherit;padding:10px;margin:8px 0}button{background:#2463a6;color:white;border:0;border-radius:8px}section{border:1px solid #ddd;border-radius:12px;padding:16px;margin:12px 0}</style>
+<h1>U15 Scout オフライン更新ツール</h1><section><p>GitHubから現在の <b>index.html</b> をダウンロードして選択してください。このツールが動画分析タブを追加する読み込みタグとオフライン起動登録を挿入し、更新済みindex.htmlを作成します。</p><input id="f" type="file" accept=".html,text/html"><p><button id="go">更新済み index.html を作成</button></p><div id="msg"></div></section>
+<script>
+document.getElementById('go').onclick=async()=>{
+ const f=document.getElementById('f').files[0],m=document.getElementById('msg');
+ if(!f){m.textContent='先にGitHubからダウンロードしたindex.htmlを選択してください。';return}
+ let s=await f.text();
+ if(!s.includes('id="analysisVideo"')){m.textContent='このindex.htmlに動画分析画面が見つかりません。別のHTMLを選択してください。';return}
+ if(!s.includes('offline-tactical.js')){
+  const tag='<script src="./offline-tactical.js"><\/script>\n<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.warn));}<\/script>\n';
+  s=s.replace('</body>',tag+'</body>');
+ }
+ const blob=new Blob([s],{type:'text/html;charset=utf-8'}),u=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=u;a.download='index.html';a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);
+ m.textContent='更新済みindex.htmlを作成しました。GitHubのmain直下にあるindex.htmlをこのファイルで置き換えてください。';
+};
+</script></html>
