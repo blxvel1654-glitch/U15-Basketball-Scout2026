@@ -338,7 +338,7 @@ function syncTeamNames(){
 
 function renderHeader(){syncTeamNames();document.getElementById('ownScore').textContent=score();document.getElementById('oppScore').textContent=state.oppQ.reduce((a,b)=>a+b,0)}
 function renderReport(){let rec=recommendations();document.getElementById('recommendations').innerHTML=rec.length?rec.map(r=>`<div class="rec ${r.high?'high':''}"><h3>${esc(r.title)} <span class="badge">${r.high?'優先度高':'確認候補'}</span></h3><p>${esc(r.detail)}</p></div>`).join(''):'<div class="empty">まだ傾向を検出していません。相手のプレーを記録すると対策候補が表示されます。</div>';
-let rows=state.own.map(p=>`<tr><td>${esc(p.no)}</td><td>${esc(p.name)}</td><td>${p.p2m*2+p.p3m*3+p.ftm}</td><td>${p.p2m}/${p.p2m+p.p2a}</td><td>${p.p3m}/${p.p3a}</td><td>${p.ftm}/${p.fta}</td><td>${p.or+p.dr}</td><td>${p.ast}</td><td>${p.st}</td><td>${p.to}</td></tr>`).join('');
+let rows=state.own.filter(p=>p.name||p.p2m+p.p2a+p.p3m+p.p3a+p.ftm+p.fta+p.or+p.dr+p.ast+p.st+p.blk+p.to+p.pf>0).map(p=>`<tr><td>${esc(p.no)}</td><td>${esc(p.name)}</td><td>${p.p2m*2+p.p3m*3+p.ftm}</td><td>${p.p2m}/${p.p2m+p.p2a}</td><td>${p.p3m}/${p.p3a}</td><td>${p.ftm}/${p.fta}</td><td>${p.or+p.dr}</td><td>${p.ast}</td><td>${p.st}</td><td>${p.to}</td></tr>`).join('');
 let oppRows=state.opp.filter(p=>p.name||p.p2m+p.p2a+p.p3m+p.p3a+p.ftm+p.fta+p.or+p.dr+p.ast+p.st+p.blk+p.to+p.rd+p.ld+p.three+p.inside+p.mid+p.turnover>0).map(p=>`<tr><td>${esc(p.no)}</td><td>${esc(p.name)}</td><td>${p.p2m*2+p.p3m*3+p.ftm}</td><td>${p.p2m}/${p.p2m+p.p2a}</td><td>${p.p3m}/${p.p3m+p.p3a}</td><td>${p.ftm}/${p.ftm+p.fta}</td><td>${p.or+p.dr}</td><td>${p.ast}</td><td>${p.st}</td><td>${p.blk}</td><td>${p.to}</td></tr>`).join('');
 document.getElementById('reportContent').innerHTML=`<p><b>${esc(state.ownName)} ${score()} - ${state.oppQ.reduce((a,b)=>a+b,0)} ${esc(state.oppName)}</b></p><h3>Q別スコア</h3><div class="tablewrap"><table class="printtable"><tr><th>Q</th>${qNames.map(q=>`<th>${q}</th>`).join('')}<th>合計</th></tr><tr><th>${esc(state.ownName)}</th>${state.ownQ.map(v=>`<td>${v}</td>`).join('')}<td>${score()}</td></tr><tr><th>${esc(state.oppName)}</th>${state.oppQ.map(v=>`<td>${v}</td>`).join('')}<td>${state.oppQ.reduce((a,b)=>a+b,0)}</td></tr></table></div><h3>${esc(state.ownName)}選手別</h3><div class="tablewrap"><table class="printtable"><tr><th>No.</th><th>選手</th><th>PTS</th><th>2P</th><th>3P</th><th>FT</th><th>REB</th><th>AST</th><th>ST</th><th>TO</th></tr>${rows}</table></div><h3>${esc(state.oppName)}選手別</h3><div class="tablewrap"><table class="printtable"><tr><th>No.</th><th>選手</th><th>PTS</th><th>2P</th><th>3P</th><th>FT</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th></tr>${oppRows}</table></div><h3>${esc(state.oppName)}のチーム傾向</h3><p>${Object.entries(groups).map(([g,items])=>items.map(([l,k])=>`${l} ${state.team[k]||0}回`).join(' ／ ')).join('<br>')}</p><h3>時刻付きプレー記録</h3>${(state.timedEvents||[]).map(x=>`<p>${fmtEventTime(x.time)} ${x.side==='own'?esc(state.ownName):esc(state.oppName)} #${esc(x.no)} ${eventLabels[x.type]||x.type}</p>`).join('')||'<p>記録なし</p>'}<h3>自動対策候補</h3>${rec.map(r=>`<p><b>${esc(r.title)}</b>：${esc(r.detail)}</p>`).join('')||'<p>検出された候補なし</p>'}`}
 
@@ -543,7 +543,25 @@ function exportJSON(){download('U15_scout_backup.json',JSON.stringify(state,null
 function exportCSV(){let lines=[[state.ownName+'背番号','選手名','PTS','2P成功','2P試投','3P成功','3P試投','FT成功','FT試投','OR','DR','AST','ST','BLK','TO','PF'].join(',')];state.own.forEach(p=>lines.push([p.no,p.name,p.p2m*2+p.p3m*3+p.ftm,p.p2m,p.p2m+p.p2a,p.p3m,p.p3a,p.ftm,p.fta,p.or,p.dr,p.ast,p.st,p.blk,p.to,p.pf].map(csv).join(',')));lines.push('');lines.push(csv(state.oppName+'選手背番号')+',選手名,PTS,2P成功,2P試投,3P成功,3P試投,FT成功,FT試投,OR,DR,AST,STL,BLK,TO,右ドライブ,左ドライブ,ゴール下,ミドル,ファウル');state.opp.forEach(p=>lines.push([p.no,p.name,p.p2m*2+p.p3m*3+p.ftm,p.p2m,p.p2m+p.p2a,p.p3m,p.p3m+p.p3a,p.ftm,p.ftm+p.fta,p.or,p.dr,p.ast,p.st,p.blk,p.to,p.rd,p.ld,p.inside,p.mid,p.foul].map(csv).join(',')));download('U15_scout.csv','\ufeff'+lines.join('\n'),'text/csv;charset=utf-8')}
 function csv(x){return '"'+String(x??'').replace(/"/g,'""')+'"'}
 function download(name,data,type){let a=document.createElement('a'),u=URL.createObjectURL(new Blob([data],{type}));a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
-function resetGame(){if(!confirm('この試合の記録をすべて消去します。よろしいですか？'))return;let names=[state.ownName,state.oppName];state=initial();state.ownName=names[0];state.oppName=names[1];history=[];resetClock();persist();render()}
+function resetGame(){
+ if(!confirm('この試合の記録・選手名・チーム名をすべて初期化します。よろしいですか？'))return;
+ state=initial();
+ eventSide='own';
+ history=[];
+ resetClock();
+ const ownInput=document.getElementById('ownName');
+ const oppInput=document.getElementById('oppName');
+ if(ownInput)ownInput.value=state.ownName;
+ if(oppInput)oppInput.value=state.oppName;
+ const ownSide=document.getElementById('eventOwnSide');
+ const oppSide=document.getElementById('eventOppSide');
+ if(ownSide)ownSide.classList.add('primary');
+ if(oppSide)oppSide.classList.remove('primary');
+ persist();
+ refreshEventPlayers();
+ renderTimedEvents();
+ toast('試合データ・選手名・チーム名を初期化しました');
+}
 function renderQuarterButtons(){let el=document.getElementById('quarters');if(el)el.innerHTML=qNames.map((q,i)=>`<button class="${i===state.q?'active':''}" onclick="state.q=${i};render()">${q}</button>`).join('')}
 ['ownName','oppName'].forEach(id=>{
  const input=document.getElementById(id);
